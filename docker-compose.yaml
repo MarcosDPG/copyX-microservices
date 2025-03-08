@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+  bff:
+    build: ./bff
+    container_name: bff
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: bff.settings
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+
+  interactions:
+    build: ./interactions
+    container_name: interactions
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: interactions.settings
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+
+  publications:
+    build: ./publications
+    container_name: publications
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: publications.settings
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+
+  users:
+    build: ./users
+    container_name: users
+    depends_on:
+      - db
+    environment:
+      DJANGO_SETTINGS_MODULE: users.settings
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+
+volumes:
+  postgres_data:
