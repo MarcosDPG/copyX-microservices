@@ -1,0 +1,3 @@
+CREATE SCHEMA auth;
+CREATE SCHEMA tweet;
+CREATE SCHEMA interaction;
