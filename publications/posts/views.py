@@ -11,6 +11,3 @@ class RetweetViewSet(viewsets.ModelViewSet):
     queryset = Retweet.objects.all()
     serializer_class = RetweetSerializer
 
-class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer

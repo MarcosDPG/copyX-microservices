@@ -12,8 +12,3 @@ class Tweet(models.Model):
 class Retweet(models.Model):
     retweet_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
-
-class Comment(models.Model):
-    comment_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
-    content = models.TextField()
