@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
     image: dpage/pgadmin4
@@ -57,6 +58,7 @@ services:
     container_name: publications
     depends_on:
       - db
+      - interactions
     environment:
       DJANGO_SETTINGS_MODULE: publications.settings
       DB_USERNAME: ${DB_USERNAME}
@@ -70,6 +72,8 @@ services:
     container_name: users
     depends_on:
       - db
+      - interactions
+      - publications
     environment:
       DJANGO_SETTINGS_MODULE: users.settings
       DB_USERNAME: ${DB_USERNAME}
