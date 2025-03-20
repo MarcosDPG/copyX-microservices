@@ -34,4 +34,9 @@ def login_view(request):
         return Response({"message": "Inicio de sesión exitoso"}, status=status.HTTP_200_OK)
     return Response({"message": "Usuario o contraseña incorrectos"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+def logout_view(request):
+    #Cerrar sesion :3                                                    
+    logout(request)
+    return Response({"message": "Sesión cerrada exitosamente"}, status=status.HTTP_200_OK)
 
