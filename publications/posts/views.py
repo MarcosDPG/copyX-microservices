@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Tweet, Retweet, Comment
-from .serializers import TweetSerializer, RetweetSerializer, CommentSerializer
+from .models import Tweet, Retweet
+from .serializers import TweetSerializer, RetweetSerializer
 
 class TweetViewSet(viewsets.ModelViewSet):
     queryset = Tweet.objects.all()

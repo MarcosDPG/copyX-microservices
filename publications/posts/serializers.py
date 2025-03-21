@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Tweet, Retweet, Comment
+from .models import Tweet, Retweet
 
 class TweetSerializer(serializers.ModelSerializer):
     class Meta:
