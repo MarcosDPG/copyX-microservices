@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 import uuid
 
 class User(AbstractUser):
@@ -17,6 +17,21 @@ class User(AbstractUser):
     first_name = None
     last_name = None
     username = None
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='api_user_set',  # Cambia el related_name para evitar conflictos
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='api_user_set',  # Cambia el related_name para evitar conflictos
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
 
     USERNAME_FIELD = 'user_name'
     REQUIRED_FIELDS = ['email', 'name', 'birth_date']

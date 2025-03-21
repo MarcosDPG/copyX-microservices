@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import check_password
 from .models import User
 from .serializers import UserSerializer
 
@@ -22,18 +23,19 @@ def register(request):
 
 @api_view(['POST'])
 def login_view(request):
-    """
-    Inicia sesión con un usuario existente.
-    """
-    user_name = request.data.get('user_name')
-    password = request.data.get('password')
+    user_name = request.data.get("user_name")
+    password = request.data.get("password")
 
-    user = authenticate(request, user_name=user_name, password=password)
-    if user is not None:
-        login(request, user)
-        return Response({"message": "Inicio de sesión exitoso"}, status=status.HTTP_200_OK)
-    return Response({"message": "Usuario o contraseña incorrectos"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = User.objects.get(user_name=user_name)
+    except User.DoesNotExist:
+        return Response({"message": "Usuario o contraseña incorrectos"}, status=400)
 
+    if check_password(password, user.password):
+        return Response({"message": "Login exitoso"}, status=200)
+    else:
+        return Response({"message": "Usuario o contraseña incorrectos"}, status=400)
+    
 @api_view(['POST'])
 def logout_view(request):
     #Cerrar sesion :3                                                    
