@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      #- postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
@@ -72,8 +72,6 @@ services:
   users:
     build: ./users
     container_name: users
-    ports:
-      - "8002:8000"
     depends_on:
       - db
     environment:
@@ -84,5 +82,5 @@ services:
       DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
 
-#volumes:
- # postgres_data:
+volumes:
+  postgres_data:
