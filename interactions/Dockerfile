@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8000
 
 # Comando para ejecutar el servidor con Gunicorn
-CMD ["sh", "-c", "sleep 2.5 && python manage.py makemigrations && python manage.py migrate && gunicorn --bind 0.0.0.0:8000 interactions.wsgi:application"]
+CMD ["sh", "-c", "sleep 5 && python manage.py makemigrations && python manage.py migrate && gunicorn --bind 0.0.0.0:8000 interactions.wsgi:application"]
 #CMD ["gunicorn", "--bind", "0.0.0.0:8000", "interactions.wsgi:application"]
