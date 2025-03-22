@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>copyX</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div>
+        <img src="{% static 'media/images/logo_dark.png' %}" alt="Logo de copyX" class="logo">
+    </div>
+    <div class="title">
+        <h1>Bienvenido a copyX </h1><br>
+        <div class="container_1">
+            <a href="{% url 'login' %}" class="btn">Inicia sesión</a><br>
+            <a href="{% url 'signup' %}" class="btn">¿No tienes cuenta? Regístrate</a>
+        </div>
+    </div>
+    <hr class="decorative-line">
+</body>
+</html>

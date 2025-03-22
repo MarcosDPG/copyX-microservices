@@ -1,0 +1,13 @@
+{% if users %}
+             {% for user in users %}
+                 {% include "partials/user_card.html" with user=user %}
+             {% endfor %}
+         {% else %}
+             <p class="no-results">
+                 {% if empty_message %}
+                     {{ empty_message }}
+                 {% else %}
+                     No se encontraron usuarios.
+                 {% endif %}
+             </p>
+        {% endif %}

@@ -1,0 +1,16 @@
+<div class="search-container">
+   <form method="get" id="search-form">
+      <fieldset>
+         <div>
+            <input type="text" name="search_users" class="search-input" placeholder="Buscar..." />
+            <button id="bt-buscar" class="search-button">
+               <span alt="buscar" class="search-icon">
+                  {% include 'icons/lupa.svg' %}
+               </span>
+           </button>
+         </div>
+      </fieldset>
+   </form>
+   <div id="post_container" class="search-results">
+      {% include 'icons/spinner.html' %}
+  </div>

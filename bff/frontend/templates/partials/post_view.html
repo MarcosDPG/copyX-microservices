@@ -1,0 +1,9 @@
+<div id="post_container">
+    {% include 'partials/post.html' with tweet=post %}        
+</div>
+<div style="border-left: 1px solid grey; width: 95%; margin-left: 5%;">
+    {% include 'partials/comment_form.html' %}
+</div>
+<div id="comments_container">
+    {% include 'icons/spinner.html' %}
+</div>

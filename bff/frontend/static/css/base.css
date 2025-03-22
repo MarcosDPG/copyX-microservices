@@ -1,0 +1,349 @@
+*::-webkit-scrollbar {
+    -webkit-appearance: none;
+    background-color: gray;
+}
+
+*::-webkit-scrollbar:vertical {
+    width:4px;
+}
+
+*::-webkit-scrollbar-button:increment,*::-webkit-scrollbar-button {
+    display: none;
+} 
+
+*::-webkit-scrollbar:horizontal {
+    height: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgb(0, 132, 255);
+    border-radius: 3px;
+}
+
+*::-webkit-scrollbar-track {
+    border-radius: 2px;  
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: large;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 200px;
+    background-color: black;
+    padding: 20px;
+    border-right: 1px solid grey;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li, .btn, #my_account {
+    border-radius: 20px;
+    margin: 10px 0;
+    padding: 5px 10px;
+}
+
+.sidebar ul li:hover {
+    background-color: rgb(52, 52, 52);
+    cursor: pointer;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar ul li:hover a {
+    font-weight: 500;
+}
+
+main {
+    flex: 1;
+    background-color: black;
+    color: white;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.nav-link span {
+    padding-left: 15px;
+}
+
+.sidebar .btn {
+    width: 180px;
+    padding: 10px;
+}
+
+.btn {
+    background-color: white;
+    color: black;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-content: center;
+    justify-content: space-evenly;
+    border: none;
+}
+
+.btn .icon {
+    display: none;
+}
+
+.btn:hover {
+    cursor: pointer;
+}
+
+.user_image {
+    min-width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    background-color: rgb(182, 182, 182);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.user_image svg {
+    height: auto;
+    width: 35px;
+    fill: rgb(52, 51, 58);
+}
+
+.user_image svg circle, .user_image svg path {
+    stroke: rgb(52, 51, 58);
+}
+
+#my_account {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-content: center;
+}
+
+#my_account:hover {
+    background-color: rgb(52, 52, 52);
+    cursor: pointer;
+}
+
+#my_account div #name {
+    color: white;
+    font-size: smaller;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-bottom: 7px;
+}
+
+#my_account div p {
+    margin: 0px;
+    margin-left: 5px;
+    color: gray;
+    font-size: x-small;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.post_compose_container {
+    margin: 30px 20px;
+    display: flex;
+    flex-direction: row;
+}
+
+.post_compose_container .user_image_container {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+
+.post_compose_container .textarea_container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: calc(100% - 160px);
+    margin: 0px 60px;
+}
+
+.post_compose_container .textarea_container textarea {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    color: white;
+    resize: none;
+    overflow: hidden;
+    min-height: 40px;
+    font-size: 18px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid grey;
+}
+
+.post_compose_container .textarea_container textarea:focus {
+    outline: none;
+}
+
+.post_compose_container .textarea_container .btn {
+    padding: 5px 25px;
+}
+
+#cobertor {
+    background-color: rgba(125, 125, 125, 0.3);
+    position: fixed;
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    display: none;
+}
+#cobertor.active {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+#cobertor .divCard {
+    margin-top: 8%;
+    border-radius: 20px;
+    background-color: black;
+    min-width: 35%;
+    width: 500px;
+    max-width: 80%;
+    max-height: 75%;
+}
+
+#cobertor .divCard section {
+    color: white;
+    padding: 10px 0px;
+    border-bottom: 1px solid grey;
+}
+
+#cobertor .divCard section span {
+    margin: 15px
+}
+
+#cobertor .divCard section span:hover {
+    cursor: pointer;
+}
+
+#cobertor .post_compose_container {
+    max-height: 60vh;
+}
+
+#close_sesion {
+    position: fixed;
+    left: 35px;
+    bottom: 120px;
+    background: black;
+    border-radius: 15px;
+    box-shadow: 1px 1px 8px rgb(255,255,255,0.8);
+    display: none;
+}
+
+#close_sesion.active {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0px 5px;
+}
+
+#close_sesion p {
+    color: white;
+    margin: 10px 0px;
+    margin-right: 15px;
+    padding-left: 15px;
+}
+
+#close_sesion p > a {
+    color: white;
+    text-decoration: none;
+}
+
+#close_sesion p:hover {
+    cursor: pointer;
+}
+
+/* HOME CSS */
+
+.home_menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 100%;
+    border-bottom: 1px solid grey;
+}
+
+.option_home_menu {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding-top: 10px;
+    width: 100%;
+}
+
+.option_home_menu:hover {
+    background-color: rgb(52, 52, 52);
+    cursor: pointer;
+}
+
+.option_home_menu p {
+    padding: 15px 5px;
+    margin: 0px;
+}
+
+.option_home_menu.selected p {
+    border-bottom: 3px solid rgb(0, 132, 255);
+}
+
+#post_container {
+    border-top: 1px solid grey;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#post_container > svg, #post_container > p {
+    margin-top: 5vh;
+} 
+
+/* PROFILE */
+
+#portada_image {
+    width: 100%;
+    height: 180px;
+    background-color: gray;
+}
+
+.profile .name {
+    font-size: x-large;
+    color: white;
+    margin-left: 20px;
+}
+
+.profile .username {
+    font-size: medium;
+    color: grey;
+    margin-left: 20px;
+}
+
+.profile p, .settings p {
+    margin: 0px;
+}

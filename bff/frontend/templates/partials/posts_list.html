@@ -1,0 +1,13 @@
+{% if posts %}
+    {% for post in posts %}
+        {% include "partials/post.html" with tweet=post %}
+    {% endfor %}
+{% else %}
+    <p>
+    {% if empty_message %}
+        {{ empty_message }}
+    {% else %}
+        No post yet...
+    {% endif %}
+    </p>
+{% endif %}

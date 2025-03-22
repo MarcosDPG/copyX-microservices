@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>copyX</title>
+    <script>
+        const USER_ID = "{{ request.user.user_id }}";
+        OptionSelected = 0;
+        function changeContent(url) {
+            if (isSamePath(location.pathname,url)) {
+                fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("content").innerHTML = html;
+                    if (url == "/home") {
+                        url = "/";
+                    }
+                    history.pushState(null, "", url);
+                    OptionSelected = 0;
+                    changeIcon(url);
+                })
+                .catch(err => console.error("Error cargando la vista:", err));
+            }
+        }
+    </script>
+    {% load static %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'media/images/logo_dark.png' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base_movil.css' %}">
+    <link rel="stylesheet" href="{% static 'css/post.css' %}">
+    <link rel="stylesheet" href="{% static 'css/search.css' %}">
+    {% block styles %}{% endblock %}
+    <script defer src="{% static 'js/base.js' %}"></script>
+    <script defer src="{% static 'js/post.js' %}"></script>
+</head>
+<body>
+
+    <div class="container">
+        <nav class="sidebar">
+            <div>
+                <img style="margin-bottom: 10px;" src="{% static 'media/images/logo_dark.png' %}" height="40px">
+                <ul>
+                    <li>
+                        <a href="/" class="nav-link">
+                            {% include 'icons/home.html' %}
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/search" class="nav-link">
+                            {% include 'icons/search.html' %}
+                            <span>Explorar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/profile" class="nav-link">
+                            {% include 'icons/profile.html' %}
+                            <span>Perfil</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/settings" class="nav-link">
+                            {% include 'icons/settings.html' %}
+                            <span>Configuraciones</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="btn" onclick="javascript:composePost(true);">
+                    <div class="icon">
+                        {% include 'icons/pen.html' %}
+                    </div>
+                    <span>Post</span>
+                </div>
+            </div>
+            <div id="my_account" onclick="javascript:document.getElementById('close_sesion').classList.toggle('active')">
+                <div class="user_image">
+                    {% include 'icons/profile.html' %}
+                </div>
+                <div style="overflow: hidden;">
+                    <p id="name">{{ request.user.name }}</p>
+                    <p>@<span id="username">{{ request.user.user_name }}</span></p>
+                </div>
+            </div>
+        </nav>
+
+        <main id="content">
+            {% include content_template %}
+        </main>
+        <div id="close_sesion">
+            <p><a href="{% url 'logout' %}">Cerrar sesión</a></p>
+            <p onclick="javascript:document.getElementById('close_sesion').classList.toggle('active')">X</p>
+            <script>
+                document.addEventListener('click', function(event) {
+                    const closeSesion = document.getElementById('close_sesion');
+                    const myAccount = document.getElementById('my_account');
+            
+                    // Verifica si el clic fue fuera del contenedor #close_sesion y #my_account
+                    if (!closeSesion.contains(event.target) && !myAccount.contains(event.target)) {
+                        closeSesion.classList.remove('active');  // Oculta el contenedor
+                    }
+                });
+            </script>
+        </div>
+        <div id="cobertor">
+            <div class="divCard">
+                <section onclick="javascript:history.back();">
+                    <span>X</span>
+                </section>
+                {% include 'partials/post_compose.html' %}
+            </div>
+        </div>
+    </div>
+</body>
+<script src="{% static 'js/router_rss.js' %}"></script>
+{% block scripts %}{% endblock %}
+</html>
