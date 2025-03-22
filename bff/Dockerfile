@@ -2,10 +2,11 @@
 FROM python:3.11
 
 # Define el directorio de trabajo
-WORKDIR /app
+WORKDIR /bff
 
-# Copia los archivos del proyecto
-COPY . .
+# Copia los archivos necesarios
+COPY requirements.txt /bff
+COPY . /bff
 
 # Instala dependencias
 RUN pip install --no-cache-dir -r requirements.txt
