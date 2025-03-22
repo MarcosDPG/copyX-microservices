@@ -55,8 +55,6 @@ services:
 
   publications:
     build: ./publications
-    ports:
-      - "8081:8000"
     container_name: publications
     depends_on:
       - db
