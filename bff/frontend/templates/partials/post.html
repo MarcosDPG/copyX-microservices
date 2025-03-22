@@ -1,0 +1,45 @@
+{% if tweet.user_name_reposter %}
+<div class="repost_container">
+    <a href="{% url 'profile_auth' %}{{ tweet.user_id_reposter }}">{{ tweet.user_name_reposter }} resposted</a>
+</div>
+{% endif %}
+<div class="post_container">
+    <div>
+        <div class="user_image">
+            {% include 'icons/profile.html' %}
+        </div>
+    </div>
+    <div class="content_post_container">
+        <div class="data_user_content_post_container">
+            <p class="name">{{ tweet.name }}</p>
+            <a href="{% url 'profile_auth' %}{{ tweet.user_id }}" class="username">@{% if tweet.user_name_commenter %}{{ tweet.user_name_commenter }}{% else %}{{ tweet.user_name }}{% endif %}</a>
+            <p class="delta_created_time">{{ tweet.delta_created }}</p>
+        </div>
+        <div class="message_content_post_container">
+            <p>{{ tweet.content }}</p>
+        </div>
+        <div class="interactions_content_post_container">
+            {% if tweet.user_name_commenter %}
+            {% else %}
+            <div>
+                <div id-post="{{ tweet.tweet_id }}" onclick="javascript:commentController(this)">
+                    {% include 'icons/comment.html' %}
+                </div>
+                <p class="comments_count">{{ tweet.comments_count }}</p>
+            </div>
+            <div>
+                <div class="{% if tweet.my_repost_id %}posted{% endif %}" id-repost="{{ tweet.my_repost_id }}"  id-post="{{ tweet.tweet_id }}" onclick="javascript:repostController(this)">
+                    {% include 'icons/repost.html' %}
+                </div>
+                <p class="reposts_count">{{ tweet.retweet_count }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <div class="{% if tweet.id_like %}liked{% endif %}" type-post="{% if tweet.user_name_commenter %}1{% else %}0{% endif %}" id-post="{% if tweet.comment_id %}{{ tweet.comment_id }}{% else %}{{ tweet.tweet_id }}{% endif %}" id-like="{% if tweet.id_like %}{{ tweet.id_like }}{% endif %}" onclick="javascript:likeController(this)">
+                    {% include 'icons/like.html' %}
+                </div>
+                <p class="likes_count">{{ tweet.like_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>

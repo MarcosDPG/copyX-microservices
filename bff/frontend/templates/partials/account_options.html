@@ -1,0 +1,69 @@
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/settings.css' %}">
+
+<div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+    <p>Cambiar informacion de cuenta</p>
+    <div class="content">
+        <div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+            <p>Editar nombre de usuario</p>
+            <div class="content">
+                <form method="post" action="{% url 'edit_username' %}">
+                    {% csrf_token %}  <!-- Token CSRF para protección -->
+                    <input type="text" name="username" value="{{ user.user_name }}" required>
+                    <button type="submit" class="btn">Guardar</button>
+                </form>
+            </div>
+        </div>
+        <div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+            <p>Editar nombre</p>
+            <div class="content">
+                <form method="post" action="{% url 'edit_name' %}">
+                    {% csrf_token %}  <!-- Token CSRF para protección -->
+                    <input type="text" name="name" value="{{ name }}" required>
+                    <button type="submit" class="btn">Guardar</button>
+                </form>
+            </div>
+        </div>
+        <div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+            <p>Editar fecha de nacimiento</p>
+            <div class="content">
+                <form method="post" action="{% url 'edit_birth_date' %}">
+                    {% csrf_token %}  <!-- Token CSRF para protección -->
+                    <p>Día</p>
+                    <input type="number" name="day" value="{{ birth.2 }}" required>
+                    <p>Mes</p>
+                    <input type="number" name="month" value="{{ birth.1 }}" required>
+                    <p>Año</p>
+                    <input type="number" name="year" value="{{ birth.0 }}" required>
+                    <button type="submit" class="btn">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+    <p>Cambiar contraseña</p>
+    <div class="content">
+        <form method="post" action="{% url 'change_password' %}">
+            {% csrf_token %}  <!-- Token CSRF para protección -->
+            <p>Contraseña actual</p>
+            <input type="password" name="old_password" required>
+            <p>Nueva contraseña</p>
+            <input type="password" name="new_password1" required>
+            <p>Confirmar nueva contraseña</p>
+            <input type="password" name="new_password2" required>
+            <button type="submit" class="btn">Guardar</button>
+        </form>
+    </div>
+</div>
+<div class="column_menu_option" onclick="javascript:toggleSelection(this);">
+    <p>Eliminar cuenta</p>
+    <div class="content">
+        <form method="post" action="{% url 'delete_account' %}">
+            {% csrf_token %}  <!-- Token CSRF para protección -->
+            <p>Escribe tu contraseña</p>
+            <input type="password" name="password" required>
+            <button type="submit" class="btn">Eliminar cuenta</button>
+        </form>
+    </div>
+</div>

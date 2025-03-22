@@ -1,0 +1,14 @@
+<div class="post_compose_container">
+    <div class="user_image_container">
+        <div class="user_image">
+            {% include 'icons/profile.html' %}
+        </div>
+    </div>
+    <form class="textarea_container" method="post" action="{% url 'post' %}">
+        {% csrf_token %}
+        <textarea class="tweet_content" placeholder="What is happening!?" name="content" required></textarea>
+        <button type="submit" class="btn">
+            <span>Post</span>
+        </button>
+    </form>
+</div>
