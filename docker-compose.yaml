@@ -45,8 +45,6 @@ services:
     container_name: interactions
     depends_on:
       - db
-      - users
-      - publications
     environment:
       DJANGO_SETTINGS_MODULE: interactions.settings
       DB_USERNAME: ${DB_USERNAME}
@@ -57,10 +55,12 @@ services:
 
   publications:
     build: ./publications
+    ports:
+      - "8081:8000"
     container_name: publications
     depends_on:
       - db
-      - users
+      - interactions
     environment:
       DJANGO_SETTINGS_MODULE: publications.settings
       DB_USERNAME: ${DB_USERNAME}
@@ -74,6 +74,8 @@ services:
     container_name: users
     depends_on:
       - db
+      - interactions
+      - publications
     environment:
       DJANGO_SETTINGS_MODULE: users.settings
       DB_USERNAME: ${DB_USERNAME}
