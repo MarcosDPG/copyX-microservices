@@ -31,6 +31,12 @@ ALLOWED_HOSTS = []
 # Redirect to login page
 LOGIN_URL = '/login/'
 
+# Application settings
+USERS_SERVICE_URL = "http://users:8000/api"
+PUBLICATIONS_SERVICE_URL = "http://publications:8000/api"
+INTERACTIONS_SERVICE_URL = "http://interactions:8000/api"
+SECURE_COOKIE = True
+
 # Application definition
 
 INSTALLED_APPS = [

@@ -17,7 +17,7 @@ class Tweet(models.Model):
 
 class Retweet(models.Model):
     retweet_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, related_name="retweets")
 
     class Meta:
         db_table = 'tweet"."retweet'  # Coloca la tabla 'retweet' en el esquema 'tweet'

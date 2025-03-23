@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new URLSearchParams(new FormData(form));
 
         try {
-            const response = await fetch("/users/auth/singup/", {
+            const response = await fetch("/signup/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -17,10 +17,13 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             if (response.ok) {
-                window.location.href = "/users/auth/login/";
+                window.location.href = "/login/";
             } else {
                 const errorData = await response.json();
-                alert(errorData.message || "Error en el registro. Inténtalo de nuevo.");
+                alert(errorData.message);
+                alert(response.statusText);
+                console.log(errorData);
+                console.error(response.body);
             }
         } catch (error) {
             console.error("Error al registrar:", error);
