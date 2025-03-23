@@ -4,10 +4,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import requests
 import json
-
-USERS_SERVICE_URL = "http://users:8000/api"
-PUBLICATIONS_SERVICE_URL = "http://publications:8000/api"
-INTERACTIONS_SERVICE_URL = "http://interactions:8000/api"
+from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE
 
 def welcome(request):
     if request.user.is_authenticated:
@@ -15,6 +12,41 @@ def welcome(request):
     return render(request, "index.html")
 
 def login(request):
+    if request.method == "POST":
+        data = {
+            "user_name": request.POST.get("user_name", "").strip(),
+            "password": request.POST.get("password", "").strip(),
+        }
+
+        if not data.get("user_name") or not data.get("password"):
+            return JsonResponse({"error": "Usuario y contraseña son obligatorios"}, status=400)
+        
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            response = requests.post(f"{USERS_SERVICE_URL}/login/", json=data, headers=headers)
+            response.raise_for_status()
+            response_data = response.json()
+
+            if response.status_code == 200:
+                # Crear la respuesta JSON
+                res = JsonResponse({"message": "Inicio de sesión exitoso"}, status=200)
+                
+                # Guardar datos en cookies seguras
+                res.set_cookie("auth_token", response_data["token"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+                res.set_cookie("user_id", response_data["user"]["user_id"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+                res.set_cookie("user_name", response_data["user"]["user_name"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+                res.set_cookie("name", response_data["user"]["name"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+                res.set_cookie("email", response_data["user"]["email"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+                res.set_cookie("birth_date", response_data["user"]["birth_date"], httponly=True, secure=SECURE_COOKIE, max_age=86400)
+
+                return res
+
+            return JsonResponse({"error": "Usuario o contraseña incorrectos"}, status=401)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
+
     return render(request, "login.html")
 
 def signup(request):
@@ -43,7 +75,7 @@ def signup(request):
             return JsonResponse({"error": response.json()}, status=response.status_code)
 
         except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=500)
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
 
     return render(request, "register.html")
 
@@ -184,3 +216,17 @@ def change_password(request):
 @login_required_bff
 def delete_account(request):
     return JsonResponse({"message": "Cuenta eliminada exitosamente"})
+
+def obtener_usuario(request):
+    user_data = {
+        "user_id": request.COOKIES.get("user_id"),
+        "user_name": request.COOKIES.get("user_name"),
+        "name": request.COOKIES.get("name"),
+        "email": request.COOKIES.get("email"),
+        "birth_date": request.COOKIES.get("birth_date"),
+    }
+    
+    if not user_data["user_id"]:
+        return JsonResponse({"error": "No autenticado"}, status=401)
+
+    return JsonResponse(user_data)
