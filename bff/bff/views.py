@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .decorators import login_required_bff
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
@@ -79,10 +79,32 @@ def signup(request):
 
     return render(request, "register.html")
 
-@require_POST
+@require_GET
 @login_required_bff
 def logout(request):
-    return redirect('welcome')
+    token = request.COOKIES.get("auth_token")
+
+    try:
+        # Enviar petición al microservicio con el token en la cabecera Authorization
+        response = requests.post(
+            f"{USERS_SERVICE_URL}/logout/",
+            headers={"Authorization": f"Token {token}"}
+        )
+
+        if response.status_code == 200:
+            response = redirect("welcome")
+            response.delete_cookie("auth_token")
+            response.delete_cookie("user_id")
+            response.delete_cookie("user_name")
+            response.delete_cookie("name")
+            response.delete_cookie("email")
+            response.delete_cookie("birth_date")
+            return response
+
+        return JsonResponse(response.json(), status=response.status_code)
+
+    except requests.exceptions.RequestException:
+        return JsonResponse({"error": "Error al cerrar sesión"}, status=400)
 
 @login_required_bff
 def home(request):
