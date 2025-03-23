@@ -60,6 +60,10 @@ services:
   publications:
     build: ./publications
     container_name: publications
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./publications:/app
     depends_on:
       - db
       - users
