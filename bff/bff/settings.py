@@ -28,6 +28,8 @@ DEBUG = bool(os.getenv("DEBUG").capitalize())
 
 ALLOWED_HOSTS = []
 
+# Redirect to login page
+LOGIN_URL = '/login/'
 
 # Application definition
 
@@ -55,7 +57,7 @@ ROOT_URLCONF = 'bff.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "frontend", "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

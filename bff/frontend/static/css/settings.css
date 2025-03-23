@@ -1,0 +1,82 @@
+.column_menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.column_menu_option {
+    border-bottom: 1px solid grey;
+    width: 94%;
+}
+
+.column_menu_option:hover {
+    background-color: rgb(125,125,125,0.2);
+    cursor: pointer;
+}
+
+.column_menu_option > p {
+    width: 90%;
+    padding: 5%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-top: 1px solid grey;
+}
+
+.column_menu_option .content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    overflow-y: hidden;
+    height: 0px;
+}
+
+.column_menu_option .content form {
+    width: 95%;
+}
+
+.column_menu_option.selected {
+    background-color: rgb(125,125,125,0.2);
+}
+
+.column_menu_option.selected >.content {
+    overflow-y: auto;
+    height: auto;
+    border-top: 1px solid grey;
+}
+
+input {
+    width: 25%;
+    height: auto;
+    padding: 7px;
+    margin: 0%;
+    margin-top: 11px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.profile p, .settings p {
+    margin-top: 0px;
+    padding-top: 10px;
+}
+
+button {
+    padding: 5px 5px;
+    margin-top: 20px;
+    border: none;
+    background: #000000;
+    color: #ffffff;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #464646;
+}
+
+@media (max-width: 480px){
+    input {
+        width: 75%;
+    }
+}
