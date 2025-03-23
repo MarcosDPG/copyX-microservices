@@ -3,6 +3,11 @@ from .decorators import login_required_bff
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import requests
+import json
+
+USERS_SERVICE_URL = "http://users:8000/api"
+PUBLICATIONS_SERVICE_URL = "http://publications:8000/api"
+INTERACTIONS_SERVICE_URL = "http://interactions:8000/api"
 
 def welcome(request):
     if request.user.is_authenticated:
@@ -13,6 +18,33 @@ def login(request):
     return render(request, "login.html")
 
 def signup(request):
+    if request.method == "POST": 
+        data = {
+            "name": request.POST.get("name", "").strip(),
+            "user_name": request.POST.get("user_name", "").strip(),
+            "email": request.POST.get("email", "").strip(),
+            "birth_date": request.POST.get("birth_date", "").strip(),
+            "password": request.POST.get("password", "").strip(),
+        }
+
+        if not all(data.values()):
+            return JsonResponse({"error": "Todos los campos son obligatorios"}, status=400)
+        
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            response = requests.post(f"{USERS_SERVICE_URL}/register/", 
+                                     data=json.dumps(data),
+                                     headers=headers)
+            response.raise_for_status()
+            if response.status_code == 201:
+                return redirect("login")  # Redirigir al login después de registrarse
+                
+            return JsonResponse({"error": response.json()}, status=response.status_code)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=500)
+
     return render(request, "register.html")
 
 @require_POST
