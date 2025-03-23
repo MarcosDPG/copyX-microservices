@@ -40,8 +40,8 @@ class Tweet(models.Model):
 
 class Comment(models.Model):
     comment_id = models.UUIDField(primary_key=True, default= uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, name='FK_Comment_User')
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, name='FK_Comment_Tweet')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
     content = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

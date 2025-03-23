@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from .models import Like, Comment, Tweet
-from .serializers import LikeSerializer
+from .serializers import LikeSerializer, CommentSerializer
 
 def create_like(model, object_id, user_id):
     content_type = ContentType.objects.get_for_model(model)
@@ -55,3 +55,26 @@ def delete_like(request, user_id, object_id):
 
     like.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+"""
+Create a comment for a Tweet, if the user has already commented the object, return a 400 status code
+Recieves a JSON object with the following format:
+{
+    "content": "comment content",
+    "user": user_id,
+    "post": tweet_id
+}
+"""
+@api_view(['POST'])
+def create_comment(request):
+    serializer = CommentSerializer(data=request.data)
+    if serializer.is_valid():
+        comment = Comment.objects.create(
+            user_id=serializer.validated_data['user'],
+            tweet_id=serializer.validated_data['post'],
+            content=serializer.validated_data['content']
+        )
+        serializer.validated_data['id'] = comment.comment_id
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

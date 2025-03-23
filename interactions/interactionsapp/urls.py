@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     path('likes', views.create_like_api, name='create_like'),
     path('likes/user/<uuid:user_id>/object/<uuid:object_id>', views.delete_like, name='delete_like'),
-    # path('comments/', views.create_delete_comment, name='create_delete_comment'),
+    path('comments', views.create_comment, name='create_comment'),
     # path('likes/<uuid:id>', views.get_like, name='likes'),
     # path('comments/<uuid:id>', views.get_comment, name='comments'),
     # path('likes/post/<uuid:user_id>&<uuid:publication_id>/', views.post_like, name='post_like'),
