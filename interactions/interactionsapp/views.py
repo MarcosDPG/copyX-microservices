@@ -159,3 +159,21 @@ def post_comment(request, id):
 
     serializer = CommentSerializer(comments, many=True)
     return Response(serializer.data)
+
+"""
+Return all the tweets that a user has liked, if the user has not liked any tweets, return a 404 status code.
+Recieves a user_id as a parameter in the URL and returns a JSON object with the tweets ids like this:
+{
+    "tweets_ids": ["tweet_id1", "tweet_id2", ...]
+}
+"""
+@api_view(['GET'])
+def get_likes(request, user_id):
+    try:
+        likes = Like.objects.filter(user_id=user_id, content_type=ContentType.objects.get_for_model(Tweet))
+        tweets_ids = [like.object_id for like in likes]
+        if not tweets_ids:
+            return JsonResponse({'message':'El usuario no ha dado likes a tweets'},status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'tweets_ids':tweets_ids})
+    except Tweet.DoesNotExist:
+        return JsonResponse({'message':'Tweet no encontrado'},status=status.HTTP_404_NOT_FOUND)
