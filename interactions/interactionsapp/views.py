@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.utils import timezone
 from django.http import JsonResponse
 from django.contrib.contenttypes.models import ContentType
 
@@ -108,3 +109,53 @@ def get_delete_comment(request, id):
 
         serializer = CommentSerializer(comment)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+"""
+Return the delta time between the current time and the time the object was created in the following format:
+- If the object was created more than a day ago, return the number of days
+- If the object was created more than an hour ago, return the number of hours
+- If the object was created more than a minute ago, return the number of minutes
+- If the object was created less than a minute ago, return the number of seconds
+Recieves a datetime object as a parameter
+"""
+def get_delta_created(fecha):
+    delta = timezone.now() - fecha
+    days = delta.days
+    seconds = delta.seconds
+    hours = seconds // 3600
+    minutes = seconds // 60
+
+    if days > 0:
+        return f"{days}D"
+    elif hours > 0:
+        return f"{hours}Hrs"
+    elif minutes > 0:
+        return f"{minutes}min"
+    else:
+        return f"{seconds}seg"
+
+"""
+Return all the comments for a Tweet, if there are no comments, return a 404 status code. Recieves a tweet_id as a parameter in the URL and returns a JSON object with the comments data like this:
+{
+    "comment_id": "comment_id",
+    "user": "user_id",
+    "tweet": "tweet_id",
+    "content": "comment content",
+    "likes_count": 0,
+    "delta_created": "Hace un instante"
+}
+"""
+@api_view(['GET'])
+def post_comment(request, id):
+    comments = Comment.objects.filter(tweet_id=id)
+
+    if not comments.exists():
+        return Response({'message':f'No hay comentarios para el tweet con id {id}'},status=status.HTTP_404_NOT_FOUND)
+
+    # Add the delta_created and likes_count fields to the comments
+    for comment in comments:
+        comment.delta_created = get_delta_created(comment.created_at)
+        comment.likes_count = Like.objects.filter(content_type=ContentType.objects.get_for_model(Comment), object_id=comment.comment_id).count()
+
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data)

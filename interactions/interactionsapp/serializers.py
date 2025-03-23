@@ -15,10 +15,12 @@ class CommentSerializer(serializers.ModelSerializer):
     user = serializers.UUIDField()
     tweet = serializers.UUIDField()
     comment_id = serializers.UUIDField(read_only=True)
+    likes_count = serializers.IntegerField(default=0)
+    delta_created = serializers.CharField(default='Hace un instante')
 
     class Meta:
         model = Comment
-        fields = ['comment_id', 'user', 'tweet', 'content']
+        fields = ['comment_id', 'user', 'tweet', 'content', 'likes_count', 'delta_created']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
