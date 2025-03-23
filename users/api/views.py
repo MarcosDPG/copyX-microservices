@@ -43,10 +43,42 @@ def login_view(request):
         token, _ = Token.objects.get_or_create(user=user)
         return Response({
             "message": "Login exitoso",
-            "token": token.key  # Devuelve el token
+            "token": token.key,
+            "user": {
+                "user_id": user.user_id,
+                "user_name": user.user_name,
+                "name": user.name,
+                "email": user.email,
+                "birth_date": user.birth_date
+            }
         }, status=200)
     else:
         return Response({"message": "Usuario o contraseña incorrectos"}, status=400)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])  
+def validate_token(request):
+    token_key = request.data.get("token")  # Recibir el token desde el cuerpo de la solicitud
+
+    if not token_key:
+        return Response({"message": "Token no proporcionado"}, status=400)
+
+    try:
+        token = Token.objects.get(key=token_key)  # Buscar el token en la base de datos
+        user = token.user  # Obtener el usuario relacionado con el token
+
+        return Response({
+            "message": "Token válido",
+            "user_id": user.user_id,
+            "user_name": user.user_name,
+            "name": user.name,
+            "email": user.email,
+            "birth_date": user.birth_date
+        }, status=200)
+
+    except Token.DoesNotExist:
+        return Response({"message": "Token inválido"}, status=401)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
