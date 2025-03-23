@@ -34,12 +34,12 @@ Recieves a JSON object with the following format:
 def create_like_api(request):
     serializer = LikeSerializer(data=request.data)
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif Like.objects.filter(user=serializer.validated_data['user'], object_id=serializer.validated_data['object_id']).exists():
-        return Response({'message': 'Ya le diste like a este objeto'}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'message': 'Ya le diste like a este objeto'}, status=status.HTTP_400_BAD_REQUEST)
     try:
         create_like(Comment if serializer.validated_data['content_type'] == 1 else Tweet, serializer.validated_data['object_id'], serializer.validated_data['user'])
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.validated_data, status=status.HTTP_201_CREATED)
     except (Tweet.DoesNotExist, Comment.DoesNotExist):
         return JsonResponse({"message": "Objeto no encontrado"}, status=HTTPStatus.NOT_FOUND)
 
@@ -52,7 +52,7 @@ def delete_like(request, user_id, object_id):
     try:
         like = Like.objects.get(user=user_id, object_id=object_id)
     except Like.DoesNotExist:
-        return Response({'message':'Like eliminado con éxito'},status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message':'Like eliminado con éxito'},status=status.HTTP_404_NOT_FOUND)
 
     like.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -76,9 +76,9 @@ def create_comment(request):
             content=serializer.validated_data['content']
         )
         serializer.validated_data['id'] = comment.comment_id
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.validated_data, status=status.HTTP_201_CREATED)
     else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 """
 Delete a comment for a Tweet if it exists, if the comment does not exist, return a 404 status code. Recieves a comment_id as a parameter in the URL
@@ -97,18 +97,18 @@ def get_delete_comment(request, id):
         try:
             comment = Comment.objects.get(comment_id=id)
         except Comment.DoesNotExist:
-            return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
 
         comment.delete()
-        return Response({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
     else:
         try:
             comment = Comment.objects.get(comment_id=id)
         except Comment.DoesNotExist:
-            return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
 
         serializer = CommentSerializer(comment)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
 
 """
 Return the delta time between the current time and the time the object was created in the following format:
@@ -150,7 +150,7 @@ def post_comment(request, id):
     comments = Comment.objects.filter(tweet_id=id)
 
     if not comments.exists():
-        return Response({'message':f'No hay comentarios para el tweet con id {id}'},status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({'message':f'No hay comentarios para el tweet con id {id}'},status=status.HTTP_404_NOT_FOUND)
 
     # Add the delta_created and likes_count fields to the comments
     for comment in comments:
@@ -158,7 +158,7 @@ def post_comment(request, id):
         comment.likes_count = Like.objects.filter(content_type=ContentType.objects.get_for_model(Comment), object_id=comment.comment_id).count()
 
     serializer = CommentSerializer(comments, many=True)
-    return Response(serializer.data)
+    return JsonResponse(serializer.data)
 
 """
 Return all the tweets that a user has liked, if the user has not liked any tweets, return a 404 status code.
