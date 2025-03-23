@@ -78,3 +78,17 @@ def create_comment(request):
         return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+"""
+Delete a comment for a Tweet if it exists, if the comment does not exist, return a 404 status code
+Recieves a comment_id as a parameter in the URL
+"""
+@api_view(['DELETE'])
+def delete_comment(request, id):
+    try:
+        comment = Comment.objects.get(comment_id=id)
+    except Comment.DoesNotExist:
+        return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
+
+    comment.delete()
+    return Response({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
