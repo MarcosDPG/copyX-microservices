@@ -1,0 +1,144 @@
+.search-container {
+    width: 97%;
+    margin-top: 1%;
+    margin-left: 1.4%;
+    margin-right: 1.4%;
+  }
+
+  .search-container form > fieldset > div {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 5px; /* Espacio entre el input y el botón */
+}
+
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+    font-size: 1rem;
+    border: 2px solid #ffffff;
+    border-radius: 15px;
+    width: 100%;
+    transition: border-color 0.3s ease;
+  }
+  
+  .search-input:focus {
+    border-color: #ffffff;
+    outline: none;
+  }
+  
+  .search-icon svg{
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    width: 1em; 
+    height: 1.3em; 
+}
+
+  .search-button {
+    padding: 10px 20px;
+    font-family: Arial, sans-serif;
+    font-size: large;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search-button:hover {
+    background-color: #464646;
+  }
+  
+  .search-results {
+    margin-top: 30px;
+    text-align: center;
+  }
+  
+  .search-results .result-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .search-results .result-item:last-child {
+    border-bottom: none;
+  }
+
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.search-results {
+  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-form {
+  flex-direction: row;
+}
+
+.post_container{
+  display: flex;
+  width: 100%;
+}
+
+/* */
+
+.user-card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: rgb(17, 17, 17);
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  width: 40%;
+  border: 0.05px solid white;
+  gap: 30px; /* Espacio entre la imagen y el texto */
+  text-align: left;
+}
+
+.user-card .user_image {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-card div {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .user-card {
+    width: 40%;
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center;
+    gap: 10px;
+  }
+
+  .user-card .user_image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .user-card div {
+    align-items: center;
+  }
+
+  .user-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,46 @@
+<div class="profile">
+    <div id="portada_image"></div>
+    <div class="user_image">
+        {% include 'icons/profile.html' %}
+        <style>
+            .profile > .user_image {
+                width: 150px;
+                height: 150px;
+                position: relative;
+                top: -75px;
+                left: 20px;
+            }
+
+            .profile > .user_image:hover {
+                cursor: pointer;
+                background: rgb(100,100,100);
+            }
+
+            .profile > .user_image svg {
+                width: 130px;
+            }
+        </style>
+    </div>
+    <div style="width: 100%; background-color: rgb(0, 0, 0, 0.6); position: fixed; top: 0px;">
+        <p style="margin: 10px;" class="name">{{ name }}</p>
+        <p style="font-size: small; color: grey; margin-left: 10px; margin-bottom: 5px;">{{ posts_count }} posts</p>
+    </div>
+    <div class="container" style="margin-top: -65px; flex-direction: column;">
+        <p class="name">{{ name }}</p>
+        <p class="username">@{{ user_name }}</p>
+    </div>
+    <div class="home_menu" style="position: sticky; top: 68px;">
+        <div class="option_home_menu selected" number-option-target="0">
+            <p>Posts</p>
+        </div>
+        <div class="option_home_menu" number-option-target="1">
+            <p>Reposts</p>
+        </div>
+        <div class="option_home_menu" number-option-target="2">
+            <p>Likes</p>
+        </div>
+    </div>
+    <div id="post_container">
+        {% include 'icons/spinner.html' %}  
+    </div>
+</div>

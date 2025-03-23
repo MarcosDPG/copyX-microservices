@@ -30,6 +30,8 @@ services:
     container_name: bff
     ports:
       - "8001:8000"
+    volumes:
+      - ./bff:/bff
     depends_on:
       - db
     environment:
