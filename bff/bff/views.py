@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect
-from .decorators import login_required_bff
+from .decorators import login_required_bff, redirect_if_authenticated_bff
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
 from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE
 
+@redirect_if_authenticated_bff
 def welcome(request):
     if request.user.is_authenticated:
         return redirect('home')
     return render(request, "index.html")
 
+@redirect_if_authenticated_bff
 def login(request):
     if request.method == "POST":
         data = {
@@ -49,6 +51,7 @@ def login(request):
 
     return render(request, "login.html")
 
+@redirect_if_authenticated_bff
 def signup(request):
     if request.method == "POST": 
         data = {
