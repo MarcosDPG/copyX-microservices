@@ -147,7 +147,7 @@ Return all the comments for a Tweet, if there are no comments, return a 404 stat
 """
 @api_view(['GET'])
 def post_comment(request, id):
-    comments = Comment.objects.filter(tweet_id=id)
+    comments = Comment.objects.filter(tweet_id=id).order_by('-created_at')
 
     if not comments.exists():
         return JsonResponse({'message':f'No hay comentarios para el tweet con id {id}'},status=status.HTTP_404_NOT_FOUND)
