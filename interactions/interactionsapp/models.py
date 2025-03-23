@@ -19,7 +19,7 @@ class Like(models.Model):
     object_id = models.UUIDField()
     # Create a generic foreign key to the object being liked, it means that the object being liked can be a Tweet or a Comment
     content_object = GenericForeignKey('content_type', 'object_id')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, name='FK_Like_User')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -50,4 +50,4 @@ class Comment(models.Model):
         return f'{self.user} commented {self.content} on {self.tweet}'
 
     class Meta:
-        db_table = "Comments"
+        db_table = 'interaction"."comments'
