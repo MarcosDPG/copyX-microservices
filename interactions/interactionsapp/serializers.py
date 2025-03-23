@@ -13,9 +13,15 @@ class LikeSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     content = serializers.CharField(max_length=300, required=True, min_length=3)
     user = serializers.UUIDField()
-    post = serializers.UUIDField()
-    id = serializers.URLField(read_only=True)
+    tweet = serializers.UUIDField()
+    comment_id = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'post', 'content']
+        fields = ['comment_id', 'user', 'tweet', 'content']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['user'] = str(instance.user.user_id)
+        representation['tweet'] = str(instance.tweet.tweet_id)
+        return representation

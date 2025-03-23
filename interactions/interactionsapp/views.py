@@ -62,7 +62,7 @@ Recieves a JSON object with the following format:
 {
     "content": "comment content",
     "user": user_id,
-    "post": tweet_id
+    "tweet": tweet_id
 }
 """
 @api_view(['POST'])
@@ -71,7 +71,7 @@ def create_comment(request):
     if serializer.is_valid():
         comment = Comment.objects.create(
             user_id=serializer.validated_data['user'],
-            tweet_id=serializer.validated_data['post'],
+            tweet_id=serializer.validated_data['tweet'],
             content=serializer.validated_data['content']
         )
         serializer.validated_data['id'] = comment.comment_id
@@ -80,15 +80,31 @@ def create_comment(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 """
-Delete a comment for a Tweet if it exists, if the comment does not exist, return a 404 status code
-Recieves a comment_id as a parameter in the URL
+Delete a comment for a Tweet if it exists, if the comment does not exist, return a 404 status code. Recieves a comment_id as a parameter in the URL
+Get a comment for a Tweet if it exists, if the comment does not exist, return a 404 status code. Recieves a comment_id as a parameter in the URL and returns a JSON object with the comment data
+like this:
+{
+    "comment_id": "comment_id",
+    "user": "user_id",
+    "tweet": "tweet_id",
+    "content": "comment content"
+}
 """
-@api_view(['DELETE'])
-def delete_comment(request, id):
-    try:
-        comment = Comment.objects.get(comment_id=id)
-    except Comment.DoesNotExist:
-        return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
+@api_view(['DELETE','GET'])
+def get_delete_comment(request, id):
+    if request.method == 'DELETE':
+        try:
+            comment = Comment.objects.get(comment_id=id)
+        except Comment.DoesNotExist:
+            return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
 
-    comment.delete()
-    return Response({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
+        comment.delete()
+        return Response({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
+    else:
+        try:
+            comment = Comment.objects.get(comment_id=id)
+        except Comment.DoesNotExist:
+            return Response({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
