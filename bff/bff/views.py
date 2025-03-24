@@ -190,9 +190,21 @@ def users(request):
 
 @login_required_bff
 def profile(request, user_id = None):
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/profile.html", {**obtener_usuario(request)})
-    return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request)})
+
+    try:
+        if user_id:
+            user_id = str(user_id)
+            response = requests.get(f"{USERS_SERVICE_URL}/user/{user_id}/")
+            response.raise_for_status()
+            user_data = response.json()
+        else:
+            user_data = obtener_usuario(request)
+        
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return render(request, "partials/profile.html", user_data)
+        return render(request, "base.html", {"content_template": "partials/profile.html", **user_data})
+    except requests.exceptions.RequestException as e:
+        return render(request, "base.html", {"content_template": "partials/profile.html", "error": f"Error en la conexión con el microservicio: {str(e)}"})
 
 @login_required_bff
 def settings_view(request):
