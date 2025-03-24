@@ -1,10 +1,11 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from .decorators import login_required_bff, redirect_if_authenticated_bff
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
-from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE
+from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE, DEBUG
 
 @redirect_if_authenticated_bff
 def welcome(request):
@@ -210,27 +211,103 @@ def settings_partial(request, option):
 @require_POST
 @login_required_bff
 def edit_username(request):
-    return JsonResponse({"message": "Nombre de usuario actualizado exitosamente"})
-
-@require_POST
-@login_required_bff
-def edit_password(request):
-    return JsonResponse({"message": "Contraseña actualizada exitosamente"})
+    data = {"user_name": request.POST.get("user_name", "").strip()}
+    if not data["user_name"]:
+        messages.error(request, "El nombre de usuario es obligatorio")
+        return redirect("settings")
+    return updateUserData(request, data)
 
 @require_POST
 @login_required_bff
 def edit_name(request):
-    return JsonResponse({"message": "Nombre actualizado exitosamente"})
+    data = {"name": request.POST.get("name", "").strip()}
+    if not data["name"]:
+        messages.error(request, "El nombre es obligatorio")
+        return redirect("settings")
+    return updateUserData(request, data)
 
 @require_POST
 @login_required_bff
 def edit_birth_date(request):
-    return JsonResponse({"message": "Fecha de nacimiento actualizada exitosamente"})
+    data = {
+        "year": request.POST.get("year", "").strip(),
+        "month": request.POST.get("month", "").strip(),
+        "day": request.POST.get("day", "").strip(),
+    }
+
+    if not all(data.values()):
+        messages.error(request, "Todos los campos de la fecha son obligatorios")
+        return redirect("settings")
+
+    birth_date = f"{data['year']}-{data['month']}-{data['day']}"
+    return updateUserData(request, {"birth_date": birth_date})
 
 @require_POST
 @login_required_bff
 def change_password(request):
-    return JsonResponse({"message": "Contraseña actualizada exitosamente"})
+    data = {
+        "old_password": request.POST.get("old_password", "").strip(),
+        "new_password1": request.POST.get("new_password1", "").strip(),
+        "new_password2": request.POST.get("new_password2", "").strip(),
+    }
+
+    if not all(data.values()):
+        messages.error(request, "Todos los campos son obligatorios")
+        return redirect("settings")
+
+    if data["new_password1"] != data["new_password2"]:
+        messages.error(request, "Las contraseñas no coinciden")
+        return redirect("settings")
+
+    # Verificar la contraseña actual del usuario
+    credentials = {
+        "user_name": request.COOKIES.get("user_name"),
+        "password": data["old_password"],
+    }
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(f"{USERS_SERVICE_URL}/login/", json=credentials, headers=headers)
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            return updateUserData(request, {"password": data["new_password1"]})
+
+        messages.error(request, "Contraseña actual incorrecta")
+    
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al actualizar la contraseña")
+
+    return redirect("settings")
+
+def updateUserData(request, data={}): 
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Token {request.COOKIES.get('auth_token')}"
+    }
+
+    try:
+        response = requests.patch(f"{USERS_SERVICE_URL}/update/", json=data, headers=headers)
+        response.raise_for_status()
+        res_data = response.json()
+
+        if response.status_code == 200:
+            messages.success(request, "Datos actualizados exitosamente")
+            response_bff = redirect("settings")
+
+            # Actualizar cookies con la nueva información del usuario
+            response_bff.set_cookie("user_id", res_data["user"]["user_id"])
+            response_bff.set_cookie("user_name", res_data["user"]["user_name"])
+            response_bff.set_cookie("name", res_data["user"]["name"])
+            response_bff.set_cookie("email", res_data["user"]["email"])
+            response_bff.set_cookie("birth_date", res_data["user"]["birth_date"])
+
+            return response_bff
+    
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al actualizar los datos")
+        return redirect("settings")
+
 
 @require_POST
 @login_required_bff
