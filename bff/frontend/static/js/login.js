@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = new URLSearchParams(new FormData(form));
 
         try {
-            const response = await fetch("/users/auth/login/", {
+            const response = await fetch("/login/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
