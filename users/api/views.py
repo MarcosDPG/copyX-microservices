@@ -11,6 +11,7 @@ from .models import User
 from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import check_password 
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
@@ -79,6 +80,15 @@ def validate_token(request):
     except Token.DoesNotExist:
         return Response({"message": "Token inválido"}, status=401)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_by_id(request, user_id):
+    """
+    Permite a un usuario autenticado ver la información pública de otro usuario.
+    """
+    user = get_object_or_404(User, user_id=user_id)  # Django ya lo trata como UUID
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
