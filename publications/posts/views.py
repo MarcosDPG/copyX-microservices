@@ -1,24 +1,25 @@
-from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework import viewsets
-import uuid
+from rest_framework.decorators import action
 from .models import Tweet, Retweet
+from rest_framework.response import Response
 from .serializers import TweetSerializer, RetweetSerializer
 
 class TweetViewSet(viewsets.ModelViewSet):
     queryset = Tweet.objects.all()
     serializer_class = TweetSerializer
 
-    @action(detail=True, methods=["get"])
-    def retweet_count(self, request, pk=None):
-        tweet = get_object_or_404(Tweet, tweet_id=pk)
-        count = tweet.retweets.count()  # Contar los retweets relacionados
-        return Response({"retweet_count": count})
-
-    def perform_create(self, serializer):
-        user_id = self.request.data.get("user_id", "00000000-0000-0000-0000-000000000000")
-        serializer.save(user_id=uuid.UUID(user_id))
+    @action(detail=True, methods=["get"], url_path="tweets")
+    def user_tweets(self, request, pk=None):
+        tweets = Tweet.objects.filter(user_id=pk)
+        serializer = self.get_serializer(tweets, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=["post"])
+    def get_by_ids(self, request):
+        tweet_ids = request.data.get("ids", [])  # Obtener IDs desde el cuerpo JSON
+        tweets = Tweet.objects.filter(tweet_id__in=tweet_ids)
+        serializer = TweetSerializer(tweets, many=True)
+        return Response(serializer.data)
 
 class RetweetViewSet(viewsets.ModelViewSet):
     queryset = Retweet.objects.all()

@@ -9,5 +9,4 @@ router.register(r'retweets', RetweetViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('tweets/<uuid:pk>/retweet_count/', TweetViewSet.as_view({'get': 'retweet_count'}), name='retweet_count'),
 ]
