@@ -177,3 +177,37 @@ def get_likes(request, user_id):
         return JsonResponse({'tweets_ids':tweets_ids})
     except Tweet.DoesNotExist:
         return JsonResponse({'message':'Tweet no encontrado'},status=status.HTTP_404_NOT_FOUND)
+
+"""
+Return the number of likes and comments for a list of tweets. Recieves a JSON object with the following format:
+{
+    "tweet_ids": ["tweet_id1", "tweet_id2", ...]
+}
+Returns a JSON object with the following format:
+{
+    "tweet_id1": {
+        "likes_count": 0,
+        "comments_count": 0
+    },
+    "tweet_id2": {
+        "likes_count": 0,
+        "comments_count": 0
+    },
+    ...
+}
+"""
+@api_view(['POST'])
+def tweets_stats(request):
+    tweet_ids = request.data.get('tweet_ids', [])
+    if not tweet_ids:
+        return JsonResponse({'message':'No se han proporcionado tweets_ids'},status=status.HTTP_400_BAD_REQUEST)
+
+    stats = {
+        tweet_id: {
+            'likes_count': Like.objects.filter(object_id=tweet_id).count(),
+            'comments_count': Comment.objects.filter(tweet_id=tweet_id).count(),
+        }
+        for tweet_id in tweet_ids
+    }
+
+    return JsonResponse(stats)

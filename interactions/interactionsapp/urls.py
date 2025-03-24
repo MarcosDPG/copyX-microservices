@@ -8,4 +8,5 @@ urlpatterns = [
     path('comments', views.create_comment, name='create_comment'),
     path('comments/<uuid:id>', views.get_delete_comment, name='get_delete_comment'),
     path('comments/tweet/<uuid:id>', views.post_comment, name='post_comment'),
+    path('tweets/stats', views.tweets_stats, name='tweets_stats'),
 ]
