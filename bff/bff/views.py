@@ -113,7 +113,7 @@ def logout(request):
 def home(request):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return render(request, "partials/home.html")  # Carga solo la parte dinámica
-    return render(request, "base.html", {"content_template": "partials/home.html"})  # Carga la página completa
+    return render(request, "base.html", {"content_template": "partials/home.html", **obtener_usuario(request)})  # Carga la página completa
 
 @require_POST
 @login_required_bff
@@ -190,26 +190,21 @@ def users(request):
 @login_required_bff
 def profile(request, user_id = None):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/profile.html", {"user": {}})
-    return render(request, "base.html", {"content_template": "partials/profile.html", "user": {}})
+        return render(request, "partials/profile.html", {**obtener_usuario(request)})
+    return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request)})
 
 @login_required_bff
 def settings_view(request):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return render(request, "partials/settings.html")
-    return render(request, "base.html", {"content_template": "partials/settings.html"})
+    return render(request, "base.html", {"content_template": "partials/settings.html", **obtener_usuario(request)})
 
 @login_required_bff
 def settings_partial(request, option):
-    user_data = {
-        "name": "name",#request.user.name,
-        "user_name": "user_name",#request.user.user_name,
-        "birth": "2004-03-02",#str(request.user.birth_date).split("-"), # año - mes - dia
-    }
     if option == "account_options":
-        return render(request, "partials/account_options.html", {**user_data})
+        return render(request, "partials/account_options.html", obtener_usuario(request))
     elif option == "preferences_options":
-        return render(request, "partials/preferences_options.html", {**user_data})
+        return render(request, "partials/preferences_options.html", obtener_usuario(request))
     return None
 
 @require_POST
@@ -249,9 +244,10 @@ def obtener_usuario(request):
         "name": request.COOKIES.get("name"),
         "email": request.COOKIES.get("email"),
         "birth_date": request.COOKIES.get("birth_date"),
+        "birth": request.COOKIES.get("birth_date","--").split("-"),
     }
     
     if not user_data["user_id"]:
-        return JsonResponse({"error": "No autenticado"}, status=401)
+        return {"error": "No autenticado"}
 
-    return JsonResponse(user_data)
+    return user_data

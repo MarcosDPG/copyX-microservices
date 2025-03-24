@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>copyX</title>
     <script>
-        const USER_ID = "{{ request.user.user_id }}";
+        const USER_ID = '{{ user_id }}';
         OptionSelected = 0;
         function changeContent(url) {
             if (isSamePath(location.pathname,url)) {
@@ -78,8 +78,8 @@
                     {% include 'icons/profile.html' %}
                 </div>
                 <div style="overflow: hidden;">
-                    <p id="name">{{ request.user.name }}</p>
-                    <p>@<span id="username">{{ request.user.user_name }}</span></p>
+                    <p id="name">{{ name }}</p>
+                    <p>@<span id="username">{{ user_name }}</span></p>
                 </div>
             </div>
         </nav>

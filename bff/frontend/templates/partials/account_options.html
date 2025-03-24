@@ -9,7 +9,7 @@
             <div class="content">
                 <form method="post" action="{% url 'edit_username' %}">
                     {% csrf_token %}  <!-- Token CSRF para protección -->
-                    <input type="text" name="username" value="{{ user.user_name }}" required>
+                    <input type="text" name="username" value="{{ user_name }}" required>
                     <button type="submit" class="btn">Guardar</button>
                 </form>
             </div>
