@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.utils import timezone
 
 class User(models.Model):
     user_id = models.UUIDField(primary_key=True)
@@ -11,6 +12,7 @@ class Tweet(models.Model):
     tweet_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     content = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tweets")
+    created_at = models.DateTimeField(default=timezone.now)
     
     class Meta:
         db_table = 'tweet"."tweet'  # Coloca la tabla 'tweet' en el esquema 'tweet'
