@@ -100,6 +100,7 @@ def get_delete_comment(request, id):
             return JsonResponse({'message':f'Comentario con id {id} no existe'},status=status.HTTP_404_NOT_FOUND)
 
         comment.delete()
+        Like.objects.filter(content_type=ContentType.objects.get_for_model(Comment), object_id=id).delete()
         return JsonResponse({"message":"El comantario fue eliminado con éxito"},status=status.HTTP_204_NO_CONTENT)
     else:
         try:
