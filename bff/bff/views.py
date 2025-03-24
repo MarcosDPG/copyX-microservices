@@ -312,7 +312,37 @@ def updateUserData(request, data={}):
 @require_POST
 @login_required_bff
 def delete_account(request):
-    return JsonResponse({"message": "Cuenta eliminada exitosamente"})
+    data = {
+        "password": request.POST.get("password", "").strip()
+    }
+
+    if not data["password"]:
+        messages.error(request, "No es posible eliminar la cuenta sin verificar que seas tu")
+        return redirect("settings")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Token {request.COOKIES.get('auth_token')}"
+    }
+
+    try:
+        response = requests.delete(f"{USERS_SERVICE_URL}/delete_account/", json=data, headers=headers)
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            response_bff = redirect("welcome")
+            response_bff.delete_cookie("auth_token")
+            response_bff.delete_cookie("user_id")
+            response_bff.delete_cookie("user_name")
+            response_bff.delete_cookie("name")
+            response_bff.delete_cookie("email")
+            response_bff.delete_cookie("birth_date")
+            return response_bff
+
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al eliminar la cuenta")
+    
+    return redirect("settings")
 
 def obtener_usuario(request):
     user_data = {
