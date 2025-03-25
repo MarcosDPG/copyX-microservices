@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
-from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE, DEBUG
+from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, SECURE_COOKIE, DEBUG
 
 @redirect_if_authenticated_bff
 def welcome(request):
@@ -194,15 +194,23 @@ def profile(request, user_id = None):
     try:
         if user_id:
             user_id = str(user_id)
-            response = requests.get(f"{USERS_SERVICE_URL}/user/{user_id}/")
+            headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+            response = requests.get(f"{USERS_SERVICE_URL}/user/{user_id}/", headers=headers)
             response.raise_for_status()
-            user_data = response.json()
+            #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{user_id}/")
+            #response2.raise_for_status()
+            #posts_count = response2.json()["posts_count"]
+            view_data = response.json()
         else:
-            user_data = obtener_usuario(request)
-        
+             #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{request.COOKIES.get('user_id')}/")
+            #response2.raise_for_status()
+            #posts_count = response2.json()["posts_count"]
+            view_data = {}
+
+        #return JsonResponse(user_data) 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return render(request, "partials/profile.html", user_data)
-        return render(request, "base.html", {"content_template": "partials/profile.html", **user_data})
+            return render(request, "partials/profile.html", {**obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
+        return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
     except requests.exceptions.RequestException as e:
         return render(request, "base.html", {"content_template": "partials/profile.html", "error": f"Error en la conexión con el microservicio: {str(e)}"})
 
