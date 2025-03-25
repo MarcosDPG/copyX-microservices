@@ -119,22 +119,20 @@ def home(request):
 @require_POST
 @login_required_bff
 def post(request):
-    # Simulación de envío de datos al microservicio
-    api_url = "http://microservicio/posts/"
     data = {
-        "user_id": request.user.id,  # ID del usuario autenticado
+        "user_id": request.COOKIES.get("user_id"),
         "content": request.POST.get("content"),
     }
-    headers = {"Authorization": f"Bearer {request.user.auth_token}"}
+    headers = {"Authorization": f"Bearer {request.COOKIES.get('auth_token')}"}
 
     try:
-        response = requests.post(api_url, json=data, headers=headers)
+        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/tweets/", json=data, headers=headers)
         if response.status_code == 201:
             return JsonResponse({"message": "Post creado exitosamente"}, status=201)
         else:
             return JsonResponse({"error": "Error al crear el post"}, status=400)
-    except requests.exceptions.RequestException:
-        return JsonResponse({"error": "Error en la conexión con el microservicio"}, status=500)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=500)
 
 @login_required_bff
 def post_view(request, post_id):

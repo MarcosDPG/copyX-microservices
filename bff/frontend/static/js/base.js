@@ -51,6 +51,9 @@ function activeTextAreaPostCompose() {
 
 function activeRequestPostCompose() {
     document.querySelectorAll(".textarea_container").forEach(form => {
+        // Verificamos si el formulario ya tiene el evento agregado
+        if (form.dataset.eventAdded) return;
+        form.dataset.eventAdded = "true"; // Marcamos que ya tiene el listener
         form.addEventListener("submit", function (event) {
             event.preventDefault();
 
@@ -68,15 +71,18 @@ function activeRequestPostCompose() {
                 "X-CSRFToken": formData.get("csrfmiddlewaretoken")
             };
 
-            path = window.location.pathname;
+            let path = window.location.pathname;
             if (path.startsWith("/") && path.length > 1) {
                 path = `/${path.split("/")[1]}/`
             }
             if (path.endsWith("/") && path.length > 1) {
                 path = path.slice(0, -1);
             }
-            if (path == '/post') {
-                formData = JSON.stringify({tweet: document.querySelector('div[id-post]').getAttribute('id-post'), content: content});
+            if (path === '/post') {
+                formData = JSON.stringify({
+                    tweet: document.querySelector('div[id-post]').getAttribute('id-post'),
+                    content: content
+                });
                 headers["Content-Type"] = "application/json";
             }
 
@@ -88,7 +94,7 @@ function activeRequestPostCompose() {
             })
             .then(response => {
                 if (response.status === 201) {
-                    return response.json(); // Procesar respuesta JSON si se creó correctamente
+                    return response.json();
                 }
                 throw new Error("Error en la solicitud, código: " + response.status);
             })
