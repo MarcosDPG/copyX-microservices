@@ -1,10 +1,28 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from .decorators import login_required_bff, redirect_if_authenticated_bff
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
-from bff.settings import USERS_SERVICE_URL, SECURE_COOKIE
+from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, SECURE_COOKIE, DEBUG
+
+CONTENT_DATA = {
+        "user_id": "",
+        "my_repost_id": "",
+        "tweet_id": "",
+        "id_like": "", #id del like                             ####
+        "comment_id": "",
+        "comments_count": "",
+        "likes_count": "", #cantidad de likes que tiene el post o comentario    ####
+        "retweet_count": "",
+        "delta_created": "", #diferencia de tiempo desde que se creó el post    ####
+        "content": "", #contenido del post o comentario         ####
+        "name": "", #name de quien creo el post o comentario    ####
+        "user_name": "", #user_name de quien creo el post
+        "user_name_commenter": "", #user_name de quien comento  ####
+        "user_name_reposter": "", #user_name de quien reposteó
+    }
 
 @redirect_if_authenticated_bff
 def welcome(request):
@@ -113,37 +131,42 @@ def logout(request):
 def home(request):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return render(request, "partials/home.html")  # Carga solo la parte dinámica
-    return render(request, "base.html", {"content_template": "partials/home.html"})  # Carga la página completa
+    return render(request, "base.html", {"content_template": "partials/home.html", **obtener_usuario(request)})  # Carga la página completa
 
 @require_POST
 @login_required_bff
 def post(request):
-    # Simulación de envío de datos al microservicio
-    api_url = "http://microservicio/posts/"
     data = {
-        "user_id": request.user.id,  # ID del usuario autenticado
+        "user_id": request.COOKIES.get("user_id"),
         "content": request.POST.get("content"),
     }
-    headers = {"Authorization": f"Bearer {request.user.auth_token}"}
+    headers = {"Authorization": f"Bearer {request.COOKIES.get('auth_token')}"}
 
     try:
-        response = requests.post(api_url, json=data, headers=headers)
+        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", json=data, headers=headers)
         if response.status_code == 201:
             return JsonResponse({"message": "Post creado exitosamente"}, status=201)
         else:
             return JsonResponse({"error": "Error al crear el post"}, status=400)
-    except requests.exceptions.RequestException:
-        return JsonResponse({"error": "Error en la conexión con el microservicio"}, status=500)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=500)
 
 @login_required_bff
 def post_view(request, post_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/post_view.html", {"post": {}})
-    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": {}})
+        return render(request, "partials/post_view.html", {"post": obtener_post_data(request, post_id)})
+    #return JsonResponse(obtener_post_data(request, post_id))
+    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": obtener_post_data(request, post_id)})
 
 @login_required_bff
 def posts(request, user_id=None):
-    return render(request, "icons/spinner.html")
+    try:
+        response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", params={"user_id": user_id} if user_id else {})
+        response.raise_for_status()
+        data_posts = response.json()
+    except Exception as e:
+        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str}"})
+    return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,tweets=data_posts)})
 
 @login_required_bff
 def comment_operations(request, post_id=None):
@@ -189,58 +212,179 @@ def users(request):
 
 @login_required_bff
 def profile(request, user_id = None):
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/profile.html", {"user": {}})
-    return render(request, "base.html", {"content_template": "partials/profile.html", "user": {}})
+
+    try:
+        if user_id:
+            user_id = str(user_id)
+            headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+            response = requests.get(f"{USERS_SERVICE_URL}/user/{user_id}/", headers=headers)
+            response.raise_for_status()
+            #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{user_id}/")
+            #response2.raise_for_status()
+            #posts_count = response2.json()["posts_count"]
+            view_data = response.json()
+        else:
+             #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{request.COOKIES.get('user_id')}/")
+            #response2.raise_for_status()
+            #posts_count = response2.json()["posts_count"]
+            view_data = {}
+
+        #return JsonResponse(user_data) 
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return render(request, "partials/profile.html", {**obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
+        return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
+    except requests.exceptions.RequestException as e:
+        return render(request, "base.html", {"content_template": "partials/profile.html", "error": f"Error en la conexión con el microservicio: {str(e)}"})
 
 @login_required_bff
 def settings_view(request):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return render(request, "partials/settings.html")
-    return render(request, "base.html", {"content_template": "partials/settings.html"})
+    return render(request, "base.html", {"content_template": "partials/settings.html", **obtener_usuario(request)})
 
 @login_required_bff
 def settings_partial(request, option):
-    user_data = {
-        "name": "name",#request.user.name,
-        "user_name": "user_name",#request.user.user_name,
-        "birth": "2004-03-02",#str(request.user.birth_date).split("-"), # año - mes - dia
-    }
     if option == "account_options":
-        return render(request, "partials/account_options.html", {**user_data})
+        return render(request, "partials/account_options.html", obtener_usuario(request))
     elif option == "preferences_options":
-        return render(request, "partials/preferences_options.html", {**user_data})
+        return render(request, "partials/preferences_options.html", obtener_usuario(request))
     return None
 
 @require_POST
 @login_required_bff
 def edit_username(request):
-    return JsonResponse({"message": "Nombre de usuario actualizado exitosamente"})
-
-@require_POST
-@login_required_bff
-def edit_password(request):
-    return JsonResponse({"message": "Contraseña actualizada exitosamente"})
+    data = {"user_name": request.POST.get("user_name", "").strip()}
+    if not data["user_name"]:
+        messages.error(request, "El nombre de usuario es obligatorio")
+        return redirect("settings")
+    return updateUserData(request, data)
 
 @require_POST
 @login_required_bff
 def edit_name(request):
-    return JsonResponse({"message": "Nombre actualizado exitosamente"})
+    data = {"name": request.POST.get("name", "").strip()}
+    if not data["name"]:
+        messages.error(request, "El nombre es obligatorio")
+        return redirect("settings")
+    return updateUserData(request, data)
 
 @require_POST
 @login_required_bff
 def edit_birth_date(request):
-    return JsonResponse({"message": "Fecha de nacimiento actualizada exitosamente"})
+    data = {
+        "year": request.POST.get("year", "").strip(),
+        "month": request.POST.get("month", "").strip(),
+        "day": request.POST.get("day", "").strip(),
+    }
+
+    if not all(data.values()):
+        messages.error(request, "Todos los campos de la fecha son obligatorios")
+        return redirect("settings")
+
+    birth_date = f"{data['year']}-{data['month']}-{data['day']}"
+    return updateUserData(request, {"birth_date": birth_date})
 
 @require_POST
 @login_required_bff
 def change_password(request):
-    return JsonResponse({"message": "Contraseña actualizada exitosamente"})
+    data = {
+        "old_password": request.POST.get("old_password", "").strip(),
+        "new_password1": request.POST.get("new_password1", "").strip(),
+        "new_password2": request.POST.get("new_password2", "").strip(),
+    }
+
+    if not all(data.values()):
+        messages.error(request, "Todos los campos son obligatorios")
+        return redirect("settings")
+
+    if data["new_password1"] != data["new_password2"]:
+        messages.error(request, "Las contraseñas no coinciden")
+        return redirect("settings")
+
+    # Verificar la contraseña actual del usuario
+    credentials = {
+        "user_name": request.COOKIES.get("user_name"),
+        "password": data["old_password"],
+    }
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(f"{USERS_SERVICE_URL}/login/", json=credentials, headers=headers)
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            return updateUserData(request, {"password": data["new_password1"]})
+
+        messages.error(request, "Contraseña actual incorrecta")
+    
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al actualizar la contraseña")
+
+    return redirect("settings")
+
+def updateUserData(request, data={}): 
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Token {request.COOKIES.get('auth_token')}"
+    }
+
+    try:
+        response = requests.patch(f"{USERS_SERVICE_URL}/update/", json=data, headers=headers)
+        response.raise_for_status()
+        res_data = response.json()
+
+        if response.status_code == 200:
+            messages.success(request, "Datos actualizados exitosamente")
+            response_bff = redirect("settings")
+
+            # Actualizar cookies con la nueva información del usuario
+            response_bff.set_cookie("user_id", res_data["user"]["user_id"])
+            response_bff.set_cookie("user_name", res_data["user"]["user_name"])
+            response_bff.set_cookie("name", res_data["user"]["name"])
+            response_bff.set_cookie("email", res_data["user"]["email"])
+            response_bff.set_cookie("birth_date", res_data["user"]["birth_date"])
+
+            return response_bff
+    
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al actualizar los datos")
+        return redirect("settings")
+
 
 @require_POST
 @login_required_bff
 def delete_account(request):
-    return JsonResponse({"message": "Cuenta eliminada exitosamente"})
+    data = {
+        "password": request.POST.get("password", "").strip()
+    }
+
+    if not data["password"]:
+        messages.error(request, "No es posible eliminar la cuenta sin verificar que seas tu")
+        return redirect("settings")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Token {request.COOKIES.get('auth_token')}"
+    }
+
+    try:
+        response = requests.delete(f"{USERS_SERVICE_URL}/delete_account/", json=data, headers=headers)
+        response.raise_for_status()
+
+        if response.status_code == 200:
+            response_bff = redirect("welcome")
+            response_bff.delete_cookie("auth_token")
+            response_bff.delete_cookie("user_id")
+            response_bff.delete_cookie("user_name")
+            response_bff.delete_cookie("name")
+            response_bff.delete_cookie("email")
+            response_bff.delete_cookie("birth_date")
+            return response_bff
+
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f"Error en la conexión con el microservicio: {str(e)}" if DEBUG else "Error al eliminar la cuenta")
+    
+    return redirect("settings")
 
 def obtener_usuario(request):
     user_data = {
@@ -249,9 +393,52 @@ def obtener_usuario(request):
         "name": request.COOKIES.get("name"),
         "email": request.COOKIES.get("email"),
         "birth_date": request.COOKIES.get("birth_date"),
+        "birth": request.COOKIES.get("birth_date","--").split("-"),
     }
     
     if not user_data["user_id"]:
-        return JsonResponse({"error": "No autenticado"}, status=401)
+        return {"error": "No autenticado"}
 
-    return JsonResponse(user_data)
+    return user_data
+
+def obtener_post_data(request, post_id):
+    try:
+        return obtener_posts_data(request, [post_id])[0]
+    except Exception as e:
+        return {"error": f"Error al obtener los datos del post: {str(e)}" if DEBUG else "Error al obtener los datos del post"}
+
+def obtener_posts_data(request, post_ids=None, tweets=None):
+    posts = [] 
+    headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+
+    if not tweets and post_ids:
+        try:
+            response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/tweets/get_by_ids/", json={"ids": post_ids}, headers=headers)
+            response.raise_for_status()
+            tweets = response.json()
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(f"Error en la conexión con el microservicio PUBLICATIONS: {str(e)}" if DEBUG else "Error al obtener los datos de los posts")
+    elif not tweets:
+        raise RuntimeError(f"No hay datos necesarios para procesar")
+
+    user_ids = list({tweet["user_id"] for tweet in tweets})  # Conjunto → Lista para eliminar duplicados
+
+    try:
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users/", json={"ids": user_ids}, headers=headers)
+        response_users.raise_for_status()
+        users_data = response_users.json()
+    except requests.exceptions.RequestException as e:
+        users_data = {}
+        #raise RuntimeError(f"Error en la conexión con el microservicio USERS: {str(e)}" if DEBUG else "Error al obtener los datos de los usuarios")
+
+    for tweet in tweets:
+        tweet_data = CONTENT_DATA.copy()
+        tweet_data.update(tweet)
+
+        user_info = users_data.get(tweet["user_id"], {})  # Obtener datos del usuario o vacío si no está
+        tweet_data["name"] = user_info.get("name", "Desconocido")
+        tweet_data["user_name"] = user_info.get("user_name", "Desconocido")
+
+        posts.append(tweet_data)
+
+    return posts

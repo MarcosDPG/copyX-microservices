@@ -11,15 +11,13 @@ from .models import User
 from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import check_password 
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
 @api_view(['POST'])
 @permission_classes([AllowAny]) 
 def register(request):
-    """
-    Registra un nuevo usuario.
-    """
     data = request.data
     serializer = UserSerializer(data=data)
     if serializer.is_valid():
@@ -79,6 +77,26 @@ def validate_token(request):
     except Token.DoesNotExist:
         return Response({"message": "Token inválido"}, status=401)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_by_id(request, user_id):
+    user = get_object_or_404(User, user_id=user_id)  # Django ya lo trata como UUID
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_users_by_ids(request):
+    
+    user_ids = request.data.get("ids", [])
+
+    if not user_ids:
+        return Response({"message": "Debes proporcionar una lista de user_id"}, status=400)
+
+    users = User.objects.filter(user_id__in=user_ids)
+    serialized_users = {str(user.user_id): UserSerializer(user).data for user in users}
+
+    return Response(serialized_users, status=200)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -90,12 +108,9 @@ def protected_view(request):
         "user": serializer.data
     })
 
-@api_view(['PATCH'])  # PATCH permite actualizar solo algunos campos
+@api_view(['PATCH']) 
 @permission_classes([IsAuthenticated])  # Requiere autenticación
 def update_user(request):
-    """
-    Permite a un usuario autenticado actualizar su perfil, incluyendo la contraseña.
-    """
     user = request.user  # Usuario autenticado
     data = request.data  
 
@@ -122,9 +137,6 @@ def update_user(request):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])  # Solo usuarios autenticados pueden borrar su cuenta
 def delete_account(request):
-    """
-    Permite a un usuario autenticado eliminar su cuenta solo si proporciona su contraseña actual.
-    """
     user = request.user  # Obtiene el usuario autenticado
     data = request.data
 

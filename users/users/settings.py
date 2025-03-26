@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.getenv("DEBUG").capitalize())
 
-ALLOWED_HOSTS = ['users']
+ALLOWED_HOSTS = ['users','localhost','localhost:8002']
 
 AUTH_USER_MODEL = 'api.User'
 

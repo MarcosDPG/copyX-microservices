@@ -11,4 +11,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('protected/', views.protected_view, name='protected'),
     path('validate_token/', views.validate_token, name='validate_token'),
+    path('user/<uuid:user_id>/', views.get_user_by_id, name='get_user_by_id'),
+    path('users-by-ids/', views.get_users_by_ids, name='get_users_by_ids'),
 ]

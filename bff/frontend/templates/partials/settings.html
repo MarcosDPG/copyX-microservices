@@ -1,4 +1,10 @@
 {% load static %}
+{% if messages %}
+    {% for message in messages %}
+        <p class="alert">{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
 <div class="settings">
     <div style="width: 100%; border-bottom: 1px solid grey;">
         <p style="padding: 5px 10px; font-size: xx-large;">Configuraciones</p>
