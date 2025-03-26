@@ -7,6 +7,23 @@ import requests
 import json
 from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, SECURE_COOKIE, DEBUG
 
+CONTENT_DATA = {
+        "user_id": "",
+        "my_repost_id": "",
+        "tweet_id": "",
+        "id_like": "", #id del like                             ####
+        "comment_id": "",
+        "comments_count": "",
+        "likes_count": "", #cantidad de likes que tiene el post o comentario    ####
+        "retweet_count": "",
+        "delta_created": "", #diferencia de tiempo desde que se creó el post    ####
+        "content": "", #contenido del post o comentario         ####
+        "name": "", #name de quien creo el post o comentario    ####
+        "user_name": "", #user_name de quien creo el post
+        "user_name_commenter": "", #user_name de quien comento  ####
+        "user_name_reposter": "", #user_name de quien reposteó
+    }
+
 @redirect_if_authenticated_bff
 def welcome(request):
     if request.user.is_authenticated:
@@ -126,7 +143,7 @@ def post(request):
     headers = {"Authorization": f"Bearer {request.COOKIES.get('auth_token')}"}
 
     try:
-        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/tweets/", json=data, headers=headers)
+        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", json=data, headers=headers)
         if response.status_code == 201:
             return JsonResponse({"message": "Post creado exitosamente"}, status=201)
         else:
@@ -137,12 +154,19 @@ def post(request):
 @login_required_bff
 def post_view(request, post_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/post_view.html", {"post": {}})
-    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": {}})
+        return render(request, "partials/post_view.html", {"post": obtener_post_data(request, post_id)})
+    #return JsonResponse(obtener_post_data(request, post_id))
+    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": obtener_post_data(request, post_id)})
 
 @login_required_bff
 def posts(request, user_id=None):
-    return render(request, "icons/spinner.html")
+    try:
+        response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", params={"user_id": user_id} if user_id else {})
+        response.raise_for_status()
+        data_posts = response.json()
+    except Exception as e:
+        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str}"})
+    return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,tweets=data_posts)})
 
 @login_required_bff
 def comment_operations(request, post_id=None):
@@ -376,3 +400,45 @@ def obtener_usuario(request):
         return {"error": "No autenticado"}
 
     return user_data
+
+def obtener_post_data(request, post_id):
+    try:
+        return obtener_posts_data(request, [post_id])[0]
+    except Exception as e:
+        return {"error": f"Error al obtener los datos del post: {str(e)}" if DEBUG else "Error al obtener los datos del post"}
+
+def obtener_posts_data(request, post_ids=None, tweets=None):
+    posts = [] 
+    headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+
+    if not tweets and post_ids:
+        try:
+            response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/tweets/get_by_ids/", json={"ids": post_ids}, headers=headers)
+            response.raise_for_status()
+            tweets = response.json()
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(f"Error en la conexión con el microservicio PUBLICATIONS: {str(e)}" if DEBUG else "Error al obtener los datos de los posts")
+    elif not tweets:
+        raise RuntimeError(f"No hay datos necesarios para procesar")
+
+    user_ids = list({tweet["user_id"] for tweet in tweets})  # Conjunto → Lista para eliminar duplicados
+
+    try:
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users/", json={"ids": user_ids}, headers=headers)
+        response_users.raise_for_status()
+        users_data = response_users.json()
+    except requests.exceptions.RequestException as e:
+        users_data = {}
+        #raise RuntimeError(f"Error en la conexión con el microservicio USERS: {str(e)}" if DEBUG else "Error al obtener los datos de los usuarios")
+
+    for tweet in tweets:
+        tweet_data = CONTENT_DATA.copy()
+        tweet_data.update(tweet)
+
+        user_info = users_data.get(tweet["user_id"], {})  # Obtener datos del usuario o vacío si no está
+        tweet_data["name"] = user_info.get("name", "Desconocido")
+        tweet_data["user_name"] = user_info.get("user_name", "Desconocido")
+
+        posts.append(tweet_data)
+
+    return posts
