@@ -49,8 +49,6 @@ services:
     container_name: interactions
     volumes:
       - ./interactions:/app
-    ports:
-      - 8002:8000
     depends_on:
       - db
       - users
@@ -66,8 +64,6 @@ services:
   publications:
     build: ./publications
     container_name: publications
-    ports:
-      - "8002:8000"
     volumes:
       - ./publications:/app
     depends_on:
@@ -96,4 +92,4 @@ services:
 
 volumes:
   postgres_data:
-    pgadmin_data:
+  pgadmin_data:
