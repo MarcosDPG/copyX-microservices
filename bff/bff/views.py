@@ -9,10 +9,11 @@ from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, SECURE_COO
 
 CONTENT_DATA = {
         "user_id": "",
-        "my_repost_id": "",
+        "retweet_id": "",
         "tweet_id": "",
         "id_like": "", #id del like                             ####
         "comment_id": "",
+        "user_id_reposter": "", #id del usuario que reposteó
         "comments_count": "",
         "likes_count": "", #cantidad de likes que tiene el post o comentario    ####
         "retweet_count": "",
@@ -140,10 +141,9 @@ def post(request):
         "user_id": request.COOKIES.get("user_id"),
         "content": request.POST.get("content"),
     }
-    headers = {"Authorization": f"Bearer {request.COOKIES.get('auth_token')}"}
 
     try:
-        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", json=data, headers=headers)
+        response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", json=data)
         if response.status_code == 201:
             return JsonResponse({"message": "Post creado exitosamente"}, status=201)
         else:
@@ -154,9 +154,9 @@ def post(request):
 @login_required_bff
 def post_view(request, post_id):
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return render(request, "partials/post_view.html", {"post": obtener_post_data(request, post_id)})
+        return render(request, "partials/post_view.html", {"post": obtener_post_data(request, post_id), **obtener_usuario(request)})
     #return JsonResponse(obtener_post_data(request, post_id))
-    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": obtener_post_data(request, post_id)})
+    return render(request, "base.html", {"content_template": "partials/post_view.html", "post": obtener_post_data(request, post_id), **obtener_usuario(request)})
 
 @login_required_bff
 def posts(request, user_id=None):
@@ -190,12 +190,25 @@ def like_operations(request, object_id):
 
 @login_required_bff
 def reposts(request, user_id):
-    return render(request, "icons/spinner.html")
+    try:
+        response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/posts/retweets/", params={"user_id": user_id} if user_id else {})
+        response.raise_for_status()
+        data_reposts = response.json()
+    except Exception as e:
+        return JsonResponse({"error": f"Error en el microservicio: {str}"})
+    return render(request, "partials/posts_list.html", {"posts": obtener_reposts_data(request,retweets=data_reposts)})
 
 @login_required_bff
-def repost_operations(request):
+def repost_operations(request, content_id=None):
     if request.method == "POST":
-        return JsonResponse({"message": "Repost creado exitosamente"})
+        try:
+            response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/retweets/",
+                            json = {"tweet": content_id}
+                        )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
+        return JsonResponse({"message": "Repost creado exitosamente"}, status=201)
     elif request.method == "DELETE":
         return JsonResponse({"message": "Repost eliminado exitosamente"})
     return JsonResponse({"error": "Método no permitido"}, status=405)
@@ -419,12 +432,12 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error en la conexión con el microservicio PUBLICATIONS: {str(e)}" if DEBUG else "Error al obtener los datos de los posts")
     elif not tweets:
-        raise RuntimeError(f"No hay datos necesarios para procesar")
+        return posts
 
     user_ids = list({tweet["user_id"] for tweet in tweets})  # Conjunto → Lista para eliminar duplicados
 
     try:
-        response_users = requests.post(f"{USERS_SERVICE_URL}/users/", json={"ids": user_ids}, headers=headers)
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users-by-ids/", json={"ids": user_ids}, headers=headers)
         response_users.raise_for_status()
         users_data = response_users.json()
     except requests.exceptions.RequestException as e:
@@ -442,3 +455,49 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
         posts.append(tweet_data)
 
     return posts
+
+def obtener_repost_data(request, post_id):
+    try:
+        return obtener_posts_data(request, [post_id])[0]
+    except Exception as e:
+        return {"error": f"Error al obtener los datos del post: {str(e)}" if DEBUG else "Error al obtener los datos del post"}
+
+def obtener_reposts_data(request, post_ids=None, retweets=None):
+    reposts = []
+    headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+
+    if not retweets and post_ids:
+        try:
+            response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/retweets/get_by_ids/", json={"ids": post_ids}, headers=headers)
+            response.raise_for_status()
+            retweets = response.json()  # Lista de {"retweet_id": ..., "tweet_id": ..., "reposter_id": ...}
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(f"Error en la conexión con el microservicio PUBLICATIONS: {str(e)}" if DEBUG else "Error al obtener los datos de los reposts")
+    elif not retweets:
+        return reposts
+
+    tweet_ids = list({rt["tweet_id"] for rt in retweets})
+    reposter_ids = list({rt["reposter_id"] for rt in retweets})
+
+    tweets_data = {tweet["tweet_id"]: tweet for tweet in obtener_posts_data(request, post_ids=tweet_ids)}
+
+    try:
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users/", json={"ids": reposter_ids}, headers=headers)
+        response_users.raise_for_status()
+        users_data = response_users.json()
+    except requests.exceptions.RequestException as e:
+        users_data = {}  # En caso de error, no agregamos datos del usuario reposter
+
+    for retweet in retweets:
+        tweet_id = retweet["tweet_id"]
+        reposter_id = retweet["reposter_id"]
+
+        retweet_data = tweets_data.get(tweet_id, {}).copy()
+        reposter_info = users_data.get(reposter_id, {})
+        
+        retweet_data["user_name_reposter"] = reposter_info.get("user_name", "Desconocido")
+        retweet_data["user_id_reposter"] = reposter_id
+
+        reposts.append(retweet_data)
+
+    return reposts

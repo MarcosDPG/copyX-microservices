@@ -1,6 +1,9 @@
+const LIKE_URL = '/interactions/likes/';
+const RETWEET_URL = '/repost/';
+
 function likeController(obj) {
     if (obj.classList.contains('liked') && obj.getAttribute('id-like')) {
-        fetch(`/interactions/likes/${obj.getAttribute('id-like')}`, {
+        fetch(`${LIKE_URL}${obj.getAttribute('id-like')}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -20,7 +23,7 @@ function likeController(obj) {
             obj.nextElementSibling.textContent = parseInt(obj.nextElementSibling.textContent) - 1;
         });
     } else {
-        fetch('/interactions/likes/', {
+        fetch(`${LIKE_URL}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,7 +48,7 @@ function likeController(obj) {
 
 function repostController(obj) {
     if (obj.classList.contains('reposted') && obj.getAttribute('id-repost')) {
-        fetch(`/retweet/${obj.getAttribute('id-repost')}`, {
+        fetch(`${RETWEET_URL}${obj.getAttribute('id-repost')}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,19 +69,19 @@ function repostController(obj) {
             loadResources(window.location.pathname);
         });
     } else {
-        fetch('/retweet/', {
+        fetch(`${RETWEET_URL}${obj.getAttribute('id-post')}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            credentials: 'include',
-            body: JSON.stringify({tweet: obj.getAttribute('id-post')})
+            credentials: 'include'
         })
         .then(response => {
             if (response.status === 201) {
                 return response.json();
             }
+            console.log(response.json());
             throw new Error("Error en la solicitud, código: " + response.status);
         })
         .then(data => {
