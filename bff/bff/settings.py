@@ -33,7 +33,7 @@ LOGIN_URL = '/login/'
 
 # Application settings
 USERS_SERVICE_URL = "http://users:8000/api"
-PUBLICATIONS_SERVICE_URL = "http://publications:8000/api"
+PUBLICATIONS_SERVICE_URL = "http://publications:8000"
 INTERACTIONS_SERVICE_URL = "http://interactions:8000/api"
 SECURE_COOKIE = True
 
