@@ -12,7 +12,7 @@ class TweetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tweet
-        fields = ["content" , "user_id" , "tweet_id" , "retweet_count", "delta_created"]
+        fields = ["content" , "user_id" , "tweet_id" , "retweet_count", "created_at" , "delta_created"]
         read_only_fields = ["retweet_count" , "delta_created"]
 
     def get_retweet_count(self, obj):
