@@ -49,6 +49,12 @@ class RetweetViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error": "No se han enviado los datos necesarios"}, status=400)
         
+    @action(detail=True, methods=["get"], url_path="retweets")
+    def user_retweets(self, request, pk=None):
+        retweets = Retweet.objects.filter(user=pk)
+        serializer = self.get_serializer(retweets, many=True)
+        return Response(serializer.data)
+        
     def perform_create(self, serializer):
         serializer.save()
     
