@@ -12,7 +12,7 @@ CONTENT_DATA = {
         "retweet_id": "",
         "tweet_id": "",
         "like_id": "", #id del like                             ####
-        "comment_id": "",
+        "comment_id": "",                                       ####
         "user_id_reposter": "", #id del usuario que reposteó
         "comments_count": "",
         "likes_count": "", #cantidad de likes que tiene el post o comentario    ####
@@ -173,11 +173,29 @@ def posts(request, user_id=None):
 
 @login_required_bff
 def comment_operations(request, post_id=None):
-    if request.method == "POST":
-        return JsonResponse({"message": "Comentario creado exitosamente"})
-    elif request.method == "GET":
-        return render(request, "icons/spinner.html")
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+    if request.method == "POST" and not post_id:
+        data = json.loads(request.body)
+        if "content" in data and "tweet" in data:
+            data.update({"user": request.COOKIES.get("user_id")})
+            try:
+                response = requests.post(f"{INTERACTIONS_SERVICE_URL}/comments", json=data)
+                response.raise_for_status()
+                return JsonResponse(response.json(), status=201)
+            except requests.exceptions.RequestException as e:
+                return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
+        else:
+            return JsonResponse({"error": "Datos incompletos"}, status=400)
+    elif request.method == "GET" and post_id:
+        try:
+            response = requests.get(f"{INTERACTIONS_SERVICE_URL}/comments/tweet/{post_id}")
+            response.raise_for_status()
+            data = response.json()["data"]
+            return render(request, "partials/posts_list.html", {"posts": obtener_comments_data(request, comments=data)})
+        except requests.exceptions.RequestException as e:
+            if e.response.status_code == 404:
+                return render(request, "partials/posts_list.html", {"posts": []})
+            return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
+    return JsonResponse({"error": "Método no permitido o datos incorrectos"}, status=405)
 
 @login_required_bff
 def likes(request, user_id):
@@ -559,3 +577,52 @@ def obtener_reposts_data(request, post_ids=None, retweets=None):
         reposts.append(retweet_data)
 
     return reposts
+
+def obtener_comments_data(request, comments=None):
+    comments_data = []
+    headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+
+    if not comments:
+        return comments_data
+
+    user_ids = list({comment["user"] for comment in comments})  # Conjunto → Lista para eliminar duplicados
+
+    try:
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users-by-ids/", json={"ids": user_ids}, headers=headers)
+        response_users.raise_for_status()
+        users_data = response_users.json()
+    except requests.exceptions.RequestException as e:
+        users_data = {}
+    
+    comments_ids = [comment["comment_id"] for comment in comments]
+
+    try:
+        response_interactions = requests.post(f"{INTERACTIONS_SERVICE_URL}/tweets", json={
+            "ids": comments_ids,
+            "user_id": request.COOKIES.get("user_id"),
+            "content_type": 1
+            })
+        response_interactions.raise_for_status()
+        interactions = response_interactions.json()["message"]
+    except requests.exceptions.RequestException as e:
+        interactions = {"error": "interacciones no disponibles"}
+    for comment in comments:
+        comment_data = CONTENT_DATA.copy()
+
+        user_info = users_data.get(comment["user"], {})  # Obtener datos del usuario o vacío si no está
+        interaction = interactions.get(comment["comment_id"], {})  # Obtener datos de interacciones o vacío si no está
+
+        comment_data["user_name_commenter"] = user_info.get("user_name", "Desconocido")
+        comment_data["name"] = user_info.get("name", "Desconocido")
+        comment_data["content"] = comment.get("content", "Desconocido")
+        comment_data["delta_created"] = comment.get("delta_created", "Desconocido")
+        comment_data["likes_count"] = comment.get("likes_count", 0)
+        comment_data["user_id"] = user_info.get("user_id", "Desconocido")
+
+        comment_data.update(interaction)
+        
+        comment_data["comment_id"] = comment.get("comment_id", "Desconocido")
+
+        comments_data.append(comment_data)
+
+    return comments_data

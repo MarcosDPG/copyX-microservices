@@ -127,6 +127,7 @@ function loadUsers() {
 }
 
 function loadPost(post_id) {
+    console.log(post_id)
     fetch(`/comments/${post_id}`, { credentials: "include" })
         .then(response => response.text())
         .then(html => {
