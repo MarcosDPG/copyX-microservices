@@ -20,6 +20,17 @@ class TweetViewSet(viewsets.ModelViewSet):
         tweets = Tweet.objects.filter(tweet_id__in=tweet_ids)
         serializer = TweetSerializer(tweets, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=["get"], url_path="count")
+    def get_tweets_count(self, request):
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            return Response({"error": "user_id is required"}, status=400)
+        count = Tweet.objects.filter(user_id=user_id).count()
+        return Response({
+            "user_id": user_id,
+            "tweet_count": count,
+            }, status=200)
 
 class RetweetViewSet(viewsets.ModelViewSet):
     queryset = Retweet.objects.all()
