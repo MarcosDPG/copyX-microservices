@@ -2,8 +2,8 @@ const LIKE_URL = '/like/';
 const RETWEET_URL = '/repost/';
 
 function likeController(obj) {
-    if (obj.classList.contains('liked') && obj.getAttribute('id-like')) {
-        fetch(`${LIKE_URL}${obj.getAttribute('id-like')}`, {
+    if (obj.classList.contains('liked') && obj.getAttribute('id-post') && obj.getAttribute('id-like')) {
+        fetch(`${LIKE_URL}${obj.getAttribute('id-post')}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ function likeController(obj) {
             throw new Error("Error en la solicitud, código: " + response.status);
         })
         .then(data => {
-            obj.setAttribute('id-like', data.like_id);
+            obj.setAttribute('id-like', data.like_id || data.like);
             obj.classList.add('liked');
             obj.nextElementSibling.textContent = parseInt(obj.nextElementSibling.textContent) + 1;
         });

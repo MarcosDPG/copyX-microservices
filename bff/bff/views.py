@@ -11,7 +11,7 @@ CONTENT_DATA = {
         "user_id": "",
         "retweet_id": "",
         "tweet_id": "",
-        "id_like": "", #id del like                             ####
+        "like_id": "", #id del like                             ####
         "comment_id": "",
         "user_id_reposter": "", #id del usuario que reposteó
         "comments_count": "",
@@ -191,8 +191,8 @@ def likes(request, user_id):
     return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,post_ids=data["tweets_ids"])})
 
 @login_required_bff
-def like_operations(request, object_id, content_type):
-    if request.method == "POST":
+def like_operations(request, object_id, content_type=None):
+    if request.method == "POST" and ((content_type == 0 or content_type == 1) and object_id):
         try:
             response = requests.post(f"{INTERACTIONS_SERVICE_URL}/likes",
                                      json={
@@ -204,14 +204,14 @@ def like_operations(request, object_id, content_type):
             return JsonResponse(response.json(), status=201)
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
-    elif request.method == "DELETE":
+    elif request.method == "DELETE" and object_id:
         try:
             response = requests.delete(f"{INTERACTIONS_SERVICE_URL}/likes/user/{request.COOKIES.get('user_id')}/object/{object_id}")
             response.raise_for_status()
             return JsonResponse({"message": "Like eliminado exitosamente"}, status=200)
         except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
-    return JsonResponse({"error": "Método no permitido"}, status=405)
+            return JsonResponse({"error": f"Error en el microservicio: {str(e)}"}, status=400)
+    return JsonResponse({"error": f"Método no permitido, ob_id:{object_id}, type:{content_type}"}, status=405)
 
 @login_required_bff
 def reposts(request, user_id):
