@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 import requests
 import json
-from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, SECURE_COOKIE, DEBUG
+from bff.settings import USERS_SERVICE_URL, PUBLICATIONS_SERVICE_URL, INTERACTIONS_SERVICE_URL, SECURE_COOKIE, DEBUG
 
 CONTENT_DATA = {
         "user_id": "",
@@ -181,14 +181,36 @@ def comment_operations(request, post_id=None):
 
 @login_required_bff
 def likes(request, user_id):
-    return render(request, "icons/spinner.html")
+    data = {}
+    try: 
+        response = requests.get(f"{INTERACTIONS_SERVICE_URL}/likes/user/{user_id}/tweets")
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
+    return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,post_ids=data["tweets_ids"])})
 
 @login_required_bff
-def like_operations(request, object_id):
+def like_operations(request, object_id, content_type):
     if request.method == "POST":
-        return JsonResponse({"message": "Like creado exitosamente"})
+        try:
+            response = requests.post(f"{INTERACTIONS_SERVICE_URL}/likes",
+                                     json={
+                                         "user": request.COOKIES.get("user_id"),
+                                         "object_id": object_id,
+                                         "content_type": content_type
+                                         })
+            response.raise_for_status()
+            return JsonResponse(response.json(), status=201)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
     elif request.method == "DELETE":
-        return JsonResponse({"message": "Like eliminado exitosamente"})
+        try:
+            response = requests.delete(f"{INTERACTIONS_SERVICE_URL}/likes/user/{request.COOKIES.get('user_id')}/object/{object_id}")
+            response.raise_for_status()
+            return JsonResponse({"message": "Like eliminado exitosamente"}, status=200)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @login_required_bff

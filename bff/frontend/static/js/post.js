@@ -1,4 +1,4 @@
-const LIKE_URL = '/interactions/likes/';
+const LIKE_URL = '/like/';
 const RETWEET_URL = '/repost/';
 
 function likeController(obj) {
@@ -23,14 +23,13 @@ function likeController(obj) {
             obj.nextElementSibling.textContent = parseInt(obj.nextElementSibling.textContent) - 1;
         });
     } else {
-        fetch(`${LIKE_URL}`, {
+        fetch(`${LIKE_URL}${obj.getAttribute('id-post')}/${parseInt(obj.getAttribute('type-post'))}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
             credentials: 'include',
-            body: JSON.stringify({object_id: obj.getAttribute('id-post'), type: parseInt(obj.getAttribute('type-post'))})
         })
         .then(response => {
             if (response.status === 201) {
