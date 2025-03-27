@@ -165,7 +165,7 @@ def post_comment(request, id):
         comment.likes_count = Like.objects.filter(content_type=ContentType.objects.get_for_model(Comment), object_id=comment.comment_id).count()
 
     serializer = CommentSerializer(comments, many=True)
-    return JsonResponse({"data": serializer.data}, status=status.HTTP_200_OK)
+    return JsonResponse({"data" : serializer.data})
 
 """
 Return all the tweets that a user has liked, if the user has not liked any tweets, return a 404 status code.
