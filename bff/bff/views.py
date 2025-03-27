@@ -236,7 +236,10 @@ def like_operations(request, object_id, content_type=None):
 @login_required_bff
 def reposts(request, user_id):
     try:
-        response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/posts/retweets/", params={"user_id": user_id} if user_id else {})
+        url = f"{PUBLICATIONS_SERVICE_URL}/retweets/"
+        if user_id:
+            url += f"{user_id}/retweets"
+        response = requests.get(url)
         response.raise_for_status()
         data_reposts = response.json()
     except Exception as e:
