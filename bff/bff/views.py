@@ -298,20 +298,17 @@ def profile(request, user_id = None):
             headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
             response = requests.get(f"{USERS_SERVICE_URL}/user/{user_id}/", headers=headers)
             response.raise_for_status()
-            #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{user_id}/")
-            #response2.raise_for_status()
-            #posts_count = response2.json()["posts_count"]
             view_data = response.json()
         else:
-             #response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/{request.COOKIES.get('user_id')}/")
-            #response2.raise_for_status()
-            #posts_count = response2.json()["posts_count"]
             view_data = {}
+        response2 = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/count/?user_id={user_id if view_data else request.COOKIES.get('user_id')}")
+        response2.raise_for_status()
+        posts_count = response2.json()["tweet_count"]
 
         #return JsonResponse(user_data) 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return render(request, "partials/profile.html", {**obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
-        return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request), "data": {"posts_count": 0, **view_data}})
+            return render(request, "partials/profile.html", {**obtener_usuario(request), "data": {"posts_count": posts_count, **view_data}})
+        return render(request, "base.html", {"content_template": "partials/profile.html", **obtener_usuario(request), "data": {"posts_count": posts_count, **view_data}})
     except requests.exceptions.RequestException as e:
         return render(request, "base.html", {"content_template": "partials/profile.html", "error": f"Error en la conexión con el microservicio: {str(e)}"})
 
