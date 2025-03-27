@@ -475,15 +475,25 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
         users_data = response_users.json()
     except requests.exceptions.RequestException as e:
         users_data = {}
-        #raise RuntimeError(f"Error en la conexión con el microservicio USERS: {str(e)}" if DEBUG else "Error al obtener los datos de los usuarios")
+    
+    tweets_ids = [tweet["tweet_id"] for tweet in tweets]
+
+    try: 
+        response_interactions = requests.post(f"{INTERACTIONS_SERVICE_URL}/tweets/stats", json={"tweet_ids": tweets_ids}, headers=headers)
+        response_interactions.raise_for_status()
+        interactions = response_interactions.json()
+    except requests.exceptions.RequestException as e:
+        interactions = {}
 
     for tweet in tweets:
         tweet_data = CONTENT_DATA.copy()
         tweet_data.update(tweet)
 
         user_info = users_data.get(tweet["user_id"], {})  # Obtener datos del usuario o vacío si no está
+        interaction = interactions.get(tweet["tweet_id"], {})  # Obtener datos de interacciones o vacío si no está
         tweet_data["name"] = user_info.get("name", "Desconocido")
         tweet_data["user_name"] = user_info.get("user_name", "Desconocido")
+        tweet_data.update(interaction)
 
         posts.append(tweet_data)
 
