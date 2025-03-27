@@ -267,7 +267,7 @@ def posts_interactios(request):
     return JsonResponse({'message': respuesta})
 
 """
-Obtiene las interacciones (like_id y comment_id) para un usuario y un post específico.
+Get the interactions (like_id and comment_id) for a user and a specific post.
 """
 def get_interactions(user_id, post_id, content_type):
     return {
@@ -276,14 +276,15 @@ def get_interactions(user_id, post_id, content_type):
     }
 
 """
-Obtiene el ID del like si existe, o una cadena vacía si no.
+Get the like_id if it exists, or an empty string if it doesn't.
 """
 def get_like_id(user_id, post_id, content_type):
+    # Object_id is the tweet_id or comment_id depending on the content_type
     like = Like.objects.filter(user_id=user_id, object_id=post_id, content_type=content_type).first()
-    return like.id if like else ""
+    return like.like_id if like else ""
 
 """
-Obtiene el ID del comentario si existe, o una cadena vacía si no.
+Get the comment_id if it exists, or an empty string if it doesn't.
 """
 def get_comment_id(user_id, post_id):
     comment = Comment.objects.filter(user_id=user_id, tweet_id=post_id).first()
