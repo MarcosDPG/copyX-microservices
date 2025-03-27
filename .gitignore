@@ -172,3 +172,7 @@ cython_debug/
 
 # Pycharm project files
 .idea/
+
+# Migrations
+**/**/migrations/*
+!**/migrations/init.py
