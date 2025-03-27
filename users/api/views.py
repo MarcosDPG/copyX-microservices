@@ -79,10 +79,15 @@ def validate_token(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_user_by_id(request, user_id):
-    user = get_object_or_404(User, user_id=user_id)  # Django ya lo trata como UUID
-    serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+def get_user_by_id(request, user_id=None):
+    if user_id:
+        user = get_object_or_404(User, user_id=user_id)  # Django ya lo trata como UUID
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response({"users": serializer.data}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
