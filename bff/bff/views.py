@@ -223,6 +223,7 @@ def reposts(request, user_id):
         data_reposts = response.json()
     except Exception as e:
         return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
+    #return JsonResponse({"data":obtener_reposts_data(request,retweets=data_reposts)})
     return render(request, "partials/posts_list.html", {"posts": obtener_reposts_data(request,retweets=data_reposts)})
 
 @login_required_bff
@@ -527,27 +528,27 @@ def obtener_reposts_data(request, post_ids=None, retweets=None):
         try:
             response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/retweets/get_by_ids/", json={"ids": post_ids}, headers=headers)
             response.raise_for_status()
-            retweets = response.json()  # Lista de {"retweet_id": ..., "tweet_id": ..., "reposter_id": ...}
+            retweets = response.json()  # Lista de {"retweet_id": ..., "tweet_id": ..., "user_id": ...}
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Error en la conexión con el microservicio PUBLICATIONS: {str(e)}" if DEBUG else "Error al obtener los datos de los reposts")
     elif not retweets:
         return reposts
 
     tweet_ids = list({rt["tweet_id"] for rt in retweets})
-    reposter_ids = list({rt["reposter_id"] for rt in retweets})
+    reposter_ids = list({rt["user_id"] for rt in retweets})
 
     tweets_data = {tweet["tweet_id"]: tweet for tweet in obtener_posts_data(request, post_ids=tweet_ids)}
 
     try:
-        response_users = requests.post(f"{USERS_SERVICE_URL}/users/", json={"ids": reposter_ids}, headers=headers)
+        response_users = requests.post(f"{USERS_SERVICE_URL}/users-by-ids/", json={"ids": reposter_ids}, headers=headers)
         response_users.raise_for_status()
         users_data = response_users.json()
     except requests.exceptions.RequestException as e:
-        users_data = {}  # En caso de error, no agregamos datos del usuario reposter
+        users_data = {"error": str(e)}  # En caso de error, no agregamos datos del usuario reposter
 
     for retweet in retweets:
         tweet_id = retweet["tweet_id"]
-        reposter_id = retweet["reposter_id"]
+        reposter_id = retweet["user_id"]
 
         retweet_data = tweets_data.get(tweet_id, {}).copy()
         reposter_info = users_data.get(reposter_id, {})
