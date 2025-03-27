@@ -161,11 +161,14 @@ def post_view(request, post_id):
 @login_required_bff
 def posts(request, user_id=None):
     try:
-        response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/posts/tweets/", params={"user_id": user_id} if user_id else {})
+        url = f"{PUBLICATIONS_SERVICE_URL}/tweets/"
+        if user_id:
+            url += f"{user_id}/tweets"
+        response = requests.get(url)
         response.raise_for_status()
         data_posts = response.json()
     except Exception as e:
-        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str}"})
+        return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"})
     return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,tweets=data_posts)})
 
 @login_required_bff
@@ -195,7 +198,7 @@ def reposts(request, user_id):
         response.raise_for_status()
         data_reposts = response.json()
     except Exception as e:
-        return JsonResponse({"error": f"Error en el microservicio: {str}"})
+        return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
     return render(request, "partials/posts_list.html", {"posts": obtener_reposts_data(request,retweets=data_reposts)})
 
 @login_required_bff
@@ -203,14 +206,22 @@ def repost_operations(request, content_id=None):
     if request.method == "POST":
         try:
             response = requests.post(f"{PUBLICATIONS_SERVICE_URL}/posts/retweets/",
-                            json = {"tweet": content_id}
+                            json = {
+                                "tweet_id": content_id,
+                                "user_id": request.COOKIES.get("user_id")
+                                }
                         )
+            response.raise_for_status()
+            return JsonResponse(response.json(), status=201)
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
+    elif request.method == "DELETE":
+        try:
+            response = requests.delete(f"{PUBLICATIONS_SERVICE_URL}/posts/retweets/{content_id}/")
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"}, status=400)
-        return JsonResponse({"message": "Repost creado exitosamente"}, status=201)
-    elif request.method == "DELETE":
-        return JsonResponse({"message": "Repost eliminado exitosamente"})
+        return JsonResponse({"message": "Repost eliminado exitosamente"}, status=200)
     return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @login_required_bff
