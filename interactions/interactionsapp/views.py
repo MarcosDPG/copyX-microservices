@@ -11,6 +11,10 @@ from rest_framework.response import Response
 from .models import Like, Comment, Tweet
 from .serializers import LikeSerializer, CommentSerializer
 
+"""
+Create a like for a Tweet or a Comment
+Recieves a model, object_id and user_id as parameters and returns the created like object
+"""
 def create_like(model, object_id, user_id):
     content_type = ContentType.objects.get_for_model(model)
     obj = model.objects.get(pk=object_id)
@@ -38,7 +42,9 @@ def create_like_api(request):
     elif Like.objects.filter(user=serializer.validated_data['user'], object_id=serializer.validated_data['object_id']).exists():
         return JsonResponse({'message': 'Ya le diste like a este objeto'}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        create_like(Comment if serializer.validated_data['content_type'] == 1 else Tweet, serializer.validated_data['object_id'], serializer.validated_data['user'])
+        like = create_like(Comment if serializer.validated_data['content_type'] == 1 else Tweet, serializer.validated_data['object_id'], serializer.validated_data['user'])
+        # Add the like_id field to the serializer
+        serializer.validated_data['like'] = like.like_id
         return JsonResponse(serializer.validated_data, status=status.HTTP_201_CREATED)
     except (Tweet.DoesNotExist, Comment.DoesNotExist):
         return JsonResponse({"message": "Objeto no encontrado"}, status=HTTPStatus.NOT_FOUND)
@@ -212,3 +218,73 @@ def tweets_stats(request):
     }
 
     return JsonResponse(stats)
+
+"""
+Return the interactions (like_id and comment_id) for a user and a specific post. Recieves a JSON object with the following format:
+{
+    "ids": ["post_id1", "post_id2", ...],
+    "user_id": user_id,
+    "content_type": content_type / 1 for Comment, 2 for Tweet
+}
+Returns a JSON object with the following format:
+{
+    "post_id1": {
+        "like_id": "like_id",
+        "comment_id": "comment_id"
+    },
+    "post_id2": {
+        "like_id": "like_id",
+        "comment_id": "comment_id"
+    },
+    ...
+}
+"""
+@api_view(['POST'])
+def posts_interactios(request):
+    # Validar los datos de entrada
+    post_ids = request.data.get('ids', [])
+    if not post_ids:
+        return JsonResponse({'message': 'No se han proporcionado post_ids'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_id = request.data.get('user_id', None)
+    if not user_id:
+        return JsonResponse({'message': 'No se ha proporcionado user_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+    content_type = request.data.get('content_type', None)
+    if not content_type:
+        return JsonResponse({'message': 'No se ha proporcionado content_type'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Obtener el ContentType correspondiente
+    content_type_model = Comment if content_type == 1 else Tweet
+    content_type_instance = ContentType.objects.get_for_model(content_type_model)
+
+    # Construir la respuesta
+    respuesta = {
+        post_id: get_interactions(user_id, post_id, content_type_instance)
+        for post_id in post_ids
+    }
+
+    return JsonResponse({'message': respuesta})
+
+"""
+Obtiene las interacciones (like_id y comment_id) para un usuario y un post específico.
+"""
+def get_interactions(user_id, post_id, content_type):
+    return {
+        'like_id': get_like_id(user_id, post_id, content_type),
+        'comment_id': get_comment_id(user_id, post_id)
+    }
+
+"""
+Obtiene el ID del like si existe, o una cadena vacía si no.
+"""
+def get_like_id(user_id, post_id, content_type):
+    like = Like.objects.filter(user_id=user_id, object_id=post_id, content_type=content_type).first()
+    return like.id if like else ""
+
+"""
+Obtiene el ID del comentario si existe, o una cadena vacía si no.
+"""
+def get_comment_id(user_id, post_id):
+    comment = Comment.objects.filter(user_id=user_id, tweet_id=post_id).first()
+    return comment.comment_id if comment else ""

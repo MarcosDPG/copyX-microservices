@@ -13,6 +13,7 @@ class User(models.Model):
 
 
 class Like(models.Model):
+    like_id = models.UUIDField(primary_key=True, default= uuid.uuid4, editable=False)
     # Save the content type of the object being liked (Tweet or Comment)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     # Save the ID of the object being liked (Tweet or Comment)
