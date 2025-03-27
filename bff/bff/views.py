@@ -160,16 +160,42 @@ def post_view(request, post_id):
 
 @login_required_bff
 def posts(request, user_id=None):
+    def posts_and_reposts():
+        try:
+            # Obtener y procesar tweets
+            tweets_response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/tweets/")
+            tweets_response.raise_for_status()
+            tweets = obtener_posts_data(request, tweets=tweets_response.json())
+
+            # Obtener y procesar retweets
+            retweets_response = requests.get(f"{PUBLICATIONS_SERVICE_URL}/retweets/")
+            retweets_response.raise_for_status()
+            retweets = obtener_reposts_data(request, retweets=retweets_response.json())
+
+            # Fusionar y ordenar por fecha de creación
+            feed = tweets + retweets
+            feed.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+
+            return feed
+        except Exception as e:
+            return []
+
     try:
-        url = f"{PUBLICATIONS_SERVICE_URL}/tweets/"
         if user_id:
-            url += f"{user_id}/tweets"
-        response = requests.get(url)
-        response.raise_for_status()
-        data_posts = response.json()
+            # Obtener solo los tweets del usuario y procesarlos
+            url = f"{PUBLICATIONS_SERVICE_URL}/tweets/{user_id}/tweets"
+            response = requests.get(url)
+            response.raise_for_status()
+            data_posts = obtener_posts_data(request, tweets=response.json())
+        else:
+            # Obtener tweets y retweets de todos los usuarios
+            data_posts = posts_and_reposts()
+
+        # Renderizar la respuesta con los posts ya procesados
+        return render(request, "partials/posts_list.html", {"posts": data_posts})
+
     except Exception as e:
         return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"})
-    return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,tweets=data_posts)})
 
 @login_required_bff
 def comment_operations(request, post_id=None):
@@ -598,6 +624,7 @@ def obtener_reposts_data(request, post_ids=None, retweets=None):
         retweet_data = tweets_data.get(tweet_id, {}).copy()
         reposter_info = users_data.get(reposter_id, {})
         
+        retweet_data.update({"created_at": retweet["created_at"]})
         retweet_data["user_name_reposter"] = reposter_info.get("user_name", "Desconocido")
         retweet_data["user_id_reposter"] = reposter_id
 
