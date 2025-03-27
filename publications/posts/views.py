@@ -25,7 +25,27 @@ class RetweetViewSet(viewsets.ModelViewSet):
     queryset = Retweet.objects.all()
     serializer_class = RetweetSerializer
 
+    @action(detail=False, methods=["post"], url_path="interaction")
+    def get_retweets_interaction(self, request):
+        pk = request.data.get("user_id")
+        tweet_ids = request.data.get("ids", [])
+        if tweet_ids and pk:
+            respuesta = {
+                tweet_id: get_interactions(pk, tweet_id)
+                for tweet_id in tweet_ids
+            }
+            return Response(respuesta)
+        else:
+            return Response({"error": "No se han enviado los datos necesarios"}, status=400)
+        
     def perform_create(self, serializer):
         serializer.save()
     
-    
+
+def get_interactions(user_id, post_id):
+    def get_retweet_id(user_id, post_id):
+        retweet = Retweet.objects.filter(user=user_id, tweet_id=post_id).first()
+        return retweet.retweet_id if retweet else ""
+    return {
+        'retweet_id': get_retweet_id(user_id, post_id),
+    }
