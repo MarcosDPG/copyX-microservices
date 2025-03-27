@@ -35,7 +35,7 @@
             </div>
             {% endif %}
             <div>
-                <div class="{% if tweet.like_id %}liked{% endif %}" type-post="{% if tweet.user_name_commenter %}1{% else %}0{% endif %}" id-post="{% if tweet.comment_id %}{{ tweet.comment_id }}{% else %}{{ tweet.tweet_id }}{% endif %}" id-like="{% if tweet.like_id %}{{ tweet.like_id }}{% endif %}" onclick="javascript:likeController(this)">
+                <div class="{% if tweet.like_id %}liked{% endif %}" type-post="{% if tweet.user_name_commenter %}1{% else %}2{% endif %}" id-post="{% if tweet.comment_id %}{{ tweet.comment_id }}{% else %}{{ tweet.tweet_id }}{% endif %}" id-like="{% if tweet.like_id %}{{ tweet.like_id }}{% endif %}" onclick="javascript:likeController(this)">
                     {% include 'icons/like.html' %}
                 </div>
                 <p class="likes_count">{{ tweet.likes_count }}</p>

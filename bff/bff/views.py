@@ -187,12 +187,14 @@ def likes(request, user_id):
         response.raise_for_status()
         data = response.json()
     except Exception as e:
+        if e.response.status_code == 404:
+            return render(request, "partials/posts_list.html", {"posts": []})
         return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
     return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,post_ids=data["tweets_ids"])})
 
 @login_required_bff
 def like_operations(request, object_id, content_type=None):
-    if request.method == "POST" and ((content_type == 0 or content_type == 1) and object_id):
+    if request.method == "POST" and ((content_type == 2 or content_type == 1) and object_id):
         try:
             response = requests.post(f"{INTERACTIONS_SERVICE_URL}/likes",
                                      json={
@@ -479,20 +481,32 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
     tweets_ids = [tweet["tweet_id"] for tweet in tweets]
 
     try: 
-        response_interactions = requests.post(f"{INTERACTIONS_SERVICE_URL}/tweets/stats", json={"tweet_ids": tweets_ids}, headers=headers)
-        response_interactions.raise_for_status()
-        interactions = response_interactions.json()
+        response_interactions_count = requests.post(f"{INTERACTIONS_SERVICE_URL}/tweets/stats", json={"tweet_ids": tweets_ids}, headers=headers)
+        response_interactions_count.raise_for_status()
+        interactions_count = response_interactions_count.json()
     except requests.exceptions.RequestException as e:
-        interactions = {}
+        interactions_count = {}
 
+    try:
+        response_interactions = requests.post(f"{INTERACTIONS_SERVICE_URL}/tweets", json={
+            "ids": tweets_ids,
+            "user_id": request.COOKIES.get("user_id"),
+            "content_type": 2
+            },headers=headers)
+        response_interactions.raise_for_status()
+        interactions = response_interactions.json()["message"]
+    except requests.exceptions.RequestException as e:
+        interactions = {"error": "interacciones no disponibles"}
     for tweet in tweets:
         tweet_data = CONTENT_DATA.copy()
         tweet_data.update(tweet)
 
         user_info = users_data.get(tweet["user_id"], {})  # Obtener datos del usuario o vacío si no está
+        interaction_count = interactions_count.get(tweet["tweet_id"], {})  # Obtener datos de interacciones o vacío si no está
         interaction = interactions.get(tweet["tweet_id"], {})  # Obtener datos de interacciones o vacío si no está
         tweet_data["name"] = user_info.get("name", "Desconocido")
         tweet_data["user_name"] = user_info.get("user_name", "Desconocido")
+        tweet_data.update(interaction_count)
         tweet_data.update(interaction)
 
         posts.append(tweet_data)
