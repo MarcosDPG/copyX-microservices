@@ -275,7 +275,19 @@ def search_view(request):
 
 @login_required_bff
 def users(request):
-    return render(request, "icons/spinner.html")
+    if request.method == "GET":
+        try:
+            headers = {"Authorization": f"Token {request.COOKIES.get('auth_token')}"}
+            response = requests.get(f"{USERS_SERVICE_URL}/users",headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            return render(request, "partials/user_card_list.html", {"users": data["users"]})
+        except requests.exceptions.RequestException as e:
+            if DEBUG:
+                return JsonResponse({"error": f"Error en la conexión con el microservicio: {str(e)}"})
+            else:
+                return render(request, "partials/users_list.html", {"users": []})
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 @login_required_bff
 def profile(request, user_id = None):
