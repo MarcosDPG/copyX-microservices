@@ -28,7 +28,7 @@
                 <p class="comments_count">{{ tweet.comments_count }}</p>
             </div>
             <div>
-                <div class="{% if tweet.retweet_id %}posted{% endif %}" id-repost="{{ tweet.retweet_id }}"  id-post="{{ tweet.tweet_id }}" onclick="javascript:repostController(this)">
+                <div class="{% if tweet.retweet_id %}reposted{% endif %}" id-repost="{{ tweet.retweet_id }}"  id-post="{{ tweet.tweet_id }}" onclick="javascript:repostController(this)">
                     {% include 'icons/repost.html' %}
                 </div>
                 <p class="reposts_count">{{ tweet.retweet_count }}</p>

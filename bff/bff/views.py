@@ -528,6 +528,17 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
         interactions = response_interactions.json()["message"]
     except requests.exceptions.RequestException as e:
         interactions = {"error": "interacciones no disponibles"}
+    
+    try:
+        response_interaction = requests.post(f"{PUBLICATIONS_SERVICE_URL}/retweets/interaction/", json={
+            "ids": tweets_ids,
+            "user_id": request.COOKIES.get("user_id")
+        })
+        response_interaction.raise_for_status()
+        interaction_data = response_interaction.json()
+    except requests.exceptions.RequestException as e:
+        interaction_data = {"error": str(e)}  # En caso de error, no agregamos 
+
     for tweet in tweets:
         tweet_data = CONTENT_DATA.copy()
         tweet_data.update(tweet)
@@ -535,10 +546,14 @@ def obtener_posts_data(request, post_ids=None, tweets=None):
         user_info = users_data.get(tweet["user_id"], {})  # Obtener datos del usuario o vacío si no está
         interaction_count = interactions_count.get(tweet["tweet_id"], {})  # Obtener datos de interacciones o vacío si no está
         interaction = interactions.get(tweet["tweet_id"], {})  # Obtener datos de interacciones o vacío si no está
+        interaction_repost = interaction_data.get(tweet["tweet_id"], {})
+
         tweet_data["name"] = user_info.get("name", "Desconocido")
         tweet_data["user_name"] = user_info.get("user_name", "Desconocido")
+        
         tweet_data.update(interaction_count)
         tweet_data.update(interaction)
+        tweet_data.update(interaction_repost)
 
         posts.append(tweet_data)
 
