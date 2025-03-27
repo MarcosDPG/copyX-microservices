@@ -5,10 +5,10 @@ class LikeSerializer(serializers.ModelSerializer):
     content_type = serializers.IntegerField()
     object_id = serializers.UUIDField()
     user = serializers.UUIDField()
+    like = serializers.UUIDField(read_only=True)
     class Meta:
         model = Like
-        fields = ['user', 'object_id', 'content_type']
-        read_only_fields = ['id']
+        fields = ['user', 'object_id', 'content_type', 'like']
 
 class CommentSerializer(serializers.ModelSerializer):
     content = serializers.CharField(max_length=300, required=True, min_length=3)

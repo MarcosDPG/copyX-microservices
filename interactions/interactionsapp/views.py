@@ -11,6 +11,10 @@ from rest_framework.response import Response
 from .models import Like, Comment, Tweet
 from .serializers import LikeSerializer, CommentSerializer
 
+"""
+Create a like for a Tweet or a Comment
+Recieves a model, object_id and user_id as parameters and returns the created like object
+"""
 def create_like(model, object_id, user_id):
     content_type = ContentType.objects.get_for_model(model)
     obj = model.objects.get(pk=object_id)
@@ -38,7 +42,9 @@ def create_like_api(request):
     elif Like.objects.filter(user=serializer.validated_data['user'], object_id=serializer.validated_data['object_id']).exists():
         return JsonResponse({'message': 'Ya le diste like a este objeto'}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        create_like(Comment if serializer.validated_data['content_type'] == 1 else Tweet, serializer.validated_data['object_id'], serializer.validated_data['user'])
+        like = create_like(Comment if serializer.validated_data['content_type'] == 1 else Tweet, serializer.validated_data['object_id'], serializer.validated_data['user'])
+        # Add the like_id field to the serializer
+        serializer.validated_data['like'] = like.like_id
         return JsonResponse(serializer.validated_data, status=status.HTTP_201_CREATED)
     except (Tweet.DoesNotExist, Comment.DoesNotExist):
         return JsonResponse({"message": "Objeto no encontrado"}, status=HTTPStatus.NOT_FOUND)
