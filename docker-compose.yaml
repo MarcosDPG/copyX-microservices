@@ -47,8 +47,6 @@ services:
   interactions:
     build: ./interactions
     container_name: interactions
-    volumes:
-      - ./interactions:/app
     depends_on:
       - db
       - users
@@ -64,8 +62,6 @@ services:
   publications:
     build: ./publications
     container_name: publications
-    volumes:
-      - ./publications:/app
     depends_on:
       - db
       - users
