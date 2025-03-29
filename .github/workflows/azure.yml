@@ -1,0 +1,63 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main  # O la rama que uses para producción
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Chequear el código fuente
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Paso 2: Configurar Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Paso 3: Iniciar sesión en Azure Container Registry
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          username: ${{ secrets.AZURE_CONTAINER_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_CONTAINER_REGISTRY_PASSWORD }}
+          registry: <tu-registro-de-contenedores>
+
+      # Paso 4: Construir y subir las imágenes Docker
+      - name: Build and Push Docker images
+        run: |
+          # Construir la imagen para el servicio db (PostgreSQL)
+          docker build -t <tu-registro-de-contenedores>/postgres_db:latest ./db
+          docker push <tu-registro-de-contenedores>/postgres_db:latest
+
+          # Construir la imagen para el servicio bff
+          docker build -t <tu-registro-de-contenedores>/bff:latest ./bff
+          docker push <tu-registro-de-contenedores>/bff:latest
+
+          # Construir la imagen para el servicio interactions
+          docker build -t <tu-registro-de-contenedores>/interactions:latest ./interactions
+          docker push <tu-registro-de-contenedores>/interactions:latest
+
+          # Construir la imagen para el servicio publications
+          docker build -t <tu-registro-de-contenedores>/publications:latest ./publications
+          docker push <tu-registro-de-contenedores>/publications:latest
+
+          # Construir la imagen para el servicio users
+          docker build -t <tu-registro-de-contenedores>/users:latest ./users
+          docker push <tu-registro-de-contenedores>/users:latest
+
+      # Paso 5: Desplegar la imagen en Azure App Service
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: <nombre-de-tu-app-service>
+          slot-name: production  # O el nombre del slot si usas uno
+          images: |
+            <tu-registro-de-contenedores>/postgres_db:latest
+            <tu-registro-de-contenedores>/bff:latest
+            <tu-registro-de-contenedores>/interactions:latest
+            <tu-registro-de-contenedores>/publications:latest
+            <tu-registro-de-contenedores>/users:latest
