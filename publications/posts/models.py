@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 import uuid
 from django.utils import timezone
 
@@ -27,3 +28,6 @@ class Retweet(models.Model):
 
     class Meta:
         db_table = 'tweet"."retweet'  # Coloca la tabla 'retweet' en el esquema 'tweet'
+        constraints = [
+            UniqueConstraint(fields=['user', 'tweet_id'], name='UQ_Retweet_User_Tweet')
+        ]
