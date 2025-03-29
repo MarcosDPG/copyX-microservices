@@ -134,6 +134,7 @@ function changeIcon(path) {
     activeTextAreaPostCompose();
     activeRequestPostCompose()
     activeHomeMenuOptions();
+    activeSearch();
     if (path.endsWith("/") && path.length > 1) {
         path = path.slice(0, -1);
     }
