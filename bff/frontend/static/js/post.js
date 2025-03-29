@@ -18,9 +18,18 @@ function likeController(obj) {
             throw new Error("Error en la solicitud, código: " + response.status);
         })
         .then(data => {
-            obj.removeAttribute('id-like');
-            obj.classList.remove('liked');
-            obj.nextElementSibling.textContent = parseInt(obj.nextElementSibling.textContent) - 1;
+            let id_like = obj.getAttribute("id-like")
+            let id_post = obj.getAttribute("id-post")
+            objs = document.querySelectorAll("div[id-post][id-like]")
+            objs.forEach(o => {
+                if (o.getAttribute("id-post") == id_post) {
+                    if (o.getAttribute("id-like") == id_like) {
+                        o.setAttribute("id-like","")
+                        o.classList.remove('liked');
+                    }
+                    o.nextElementSibling.textContent = parseInt(o.nextElementSibling.textContent) - 1;
+                }
+            });
         });
     } else {
         fetch(`${LIKE_URL}${obj.getAttribute('id-post')}/${parseInt(obj.getAttribute('type-post'))}`, {
@@ -38,9 +47,15 @@ function likeController(obj) {
             throw new Error("Error en la solicitud, código: " + response.status);
         })
         .then(data => {
-            obj.setAttribute('id-like', data.like_id || data.like);
-            obj.classList.add('liked');
-            obj.nextElementSibling.textContent = parseInt(obj.nextElementSibling.textContent) + 1;
+            let id_post = obj.getAttribute("id-post")
+            objs = document.querySelectorAll("div[id-post][id-like]")
+            objs.forEach(o => {
+                if (o.getAttribute("id-post") == id_post) {
+                    o.setAttribute('id-like', data.like_id || data.like);
+                    o.classList.add('liked');
+                    o.nextElementSibling.textContent = parseInt(o.nextElementSibling.textContent) + 1;
+                }
+            });
         });
     }
 }
