@@ -1,0 +1,52 @@
+@media screen and (max-width: 1080px) {
+    
+    .sidebar {
+        width: auto;
+        padding: 10px;
+    }
+    
+    .sidebar ul li, .btn, #my_account {
+        border-radius: 20px;
+        margin: 10px 0;
+        padding: 5px;
+    }
+    
+    .sidebar ul li a {
+        justify-content: center;
+    }
+    
+    .nav-link span {
+        display: none;
+    }
+    
+    .sidebar .btn {
+        width: auto;
+        padding: 10px;
+    }
+    
+    .btn .icon {
+        display: block;
+    }
+
+    .btn:has(> .icon) span {
+        display: none;
+    }
+
+    #my_account {
+        margin-bottom: 60px
+    }
+    
+    #my_account div #name {
+        display: none;
+    }
+    
+    #my_account div p {
+        display: none;
+    }
+
+    .post_compose_container .textarea_container {
+        margin: 0px 15px;
+        width: calc(100% - 70px);
+    }
+
+}
