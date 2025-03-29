@@ -187,6 +187,7 @@ def posts(request, user_id=None):
             response = requests.get(url)
             response.raise_for_status()
             data_posts = obtener_posts_data(request, tweets=response.json())
+            data_posts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         else:
             # Obtener tweets y retweets de todos los usuarios
             data_posts = posts_and_reposts()
@@ -230,11 +231,13 @@ def likes(request, user_id):
         response = requests.get(f"{INTERACTIONS_SERVICE_URL}/likes/user/{user_id}/tweets")
         response.raise_for_status()
         data = response.json()
+        posts = obtener_posts_data(request,post_ids=data["tweets_ids"])
+        posts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     except Exception as e:
         if e.response.status_code == 404:
             return render(request, "partials/posts_list.html", {"posts": []})
         return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
-    return render(request, "partials/posts_list.html", {"posts": obtener_posts_data(request,post_ids=data["tweets_ids"])})
+    return render(request, "partials/posts_list.html", {"posts": posts})
 
 @login_required_bff
 def like_operations(request, object_id, content_type=None):
@@ -268,10 +271,12 @@ def reposts(request, user_id):
         response = requests.get(url)
         response.raise_for_status()
         data_reposts = response.json()
+        reposts = obtener_reposts_data(request,retweets=data_reposts)
+        reposts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     except Exception as e:
         return JsonResponse({"error": f"Error en el microservicio: {str(e)}"})
     #return JsonResponse({"data":obtener_reposts_data(request,retweets=data_reposts)})
-    return render(request, "partials/posts_list.html", {"posts": obtener_reposts_data(request,retweets=data_reposts)})
+    return render(request, "partials/posts_list.html", {"posts": reposts})
 
 @login_required_bff
 def repost_operations(request, content_id=None):
